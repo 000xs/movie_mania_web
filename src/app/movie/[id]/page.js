@@ -83,7 +83,7 @@ export default function MoviePage({ params }) {
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Movie Not Found</h1>
           <p className="text-gray-400 mb-8">
-            The movie you're looking for doesn't exist.
+            The movie youre looking for doesn&apos;t exist.
           </p>
           <Link
             href="/"
@@ -110,7 +110,7 @@ export default function MoviePage({ params }) {
               <span className="text-xl font-bold text-red-600">Movie Mania</span>
             </Link>
             <button
-              onClick={() => useRouter().back()}
+              onClick={() => router.back()}
               className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />

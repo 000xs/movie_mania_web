@@ -131,7 +131,7 @@ export default function SearchPage() {
             <div className="text-center py-16">
               <h2 className="text-2xl font-bold mb-4">No Results Found</h2>
               <p className="text-gray-400 mb-8">
-                We couldn't find any movies matching "{query}". Try searching
+                We couldn&apos;t find any movies matching &ldquo;{query}&ldquo;. Try searching
                 with different keywords.
               </p>
             </div>
