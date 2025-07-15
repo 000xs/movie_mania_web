@@ -1,171 +1,403 @@
-"use client";
+"use client"
+import Link from "next/link"
+import Image from "next/image"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Play, Plus, Share, Star, Calendar, Clock, Globe, ChevronRight } from 'lucide-react'
+import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb"
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Star, Calendar, Clock, Play, Info } from 'lucide-react';
-import { getTVSeriesDetails, getImageUrl, getBackdropUrl, getTVSeriesCredits } from '@/lib/tmdb';
-
-export default function TVSeriesPage() {
-  const params = useParams();
-  const { id } = params;
-  const [series, setSeries] = useState(null);
-  const [credits, setCredits] = useState({ cast: [], crew: [] });
-  const [loading, setLoading] = useState(true);
+export default function TvSeriesPage({ params }) {
+  const [series, setSeries] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const router = useRouter()
+  const seriesId = params.id
 
   useEffect(() => {
-    if (id) {
-      const fetchTVSeriesData = async () => {
-        try {
-          setLoading(true);
-          const seriesData = await getTVSeriesDetails(id);
-          const creditsData = await getTVSeriesCredits(id);
-          setSeries(seriesData);
-          setCredits(creditsData);
-        } catch (error) {
-          console.error('Error fetching TV series data:', error);
-        } finally {
-          setLoading(false);
+    const fetchSeriesData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`/api/tv/${seriesId}`)
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
-      };
-      fetchTVSeriesData();
+
+        const responseData = await response.json()
+
+        if (!responseData.results || responseData.results.length === 0) {
+          throw new Error("TV Series not found")
+        }
+
+        const seriesData = responseData.results[0]
+        setSeries(formatSeries(seriesData))
+      } catch (err) {
+        console.error("Error fetching TV series:", err)
+        setError(err.message || "Failed to load TV series")
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [id]);
+
+    if (seriesId) {
+      fetchSeriesData()
+    }
+  }, [seriesId])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl">Loading TV series...</p>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg sm:text-xl">Loading TV series details...</p>
         </div>
       </div>
-    );
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">Error</h1>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">{error}</p>
+          <Link
+            href="/"
+            className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 sm:py-3 rounded-md transition-colors inline-flex items-center text-sm sm:text-base"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   if (!series) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-xl">TV Series not found.</p>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">TV Series Not Found</h1>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">The TV series you're looking for doesn't exist.</p>
+          <Link
+            href="/"
+            className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 sm:py-3 rounded-md transition-colors inline-flex items-center text-sm sm:text-base"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
+        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center space-x-4 sm:space-x-8">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded flex items-center justify-center font-bold text-sm sm:text-xl">
+                M
+              </div>
+              <span className="text-lg sm:text-xl font-bold text-red-600 hidden xs:block">Movie Mania</span>
+            </Link>
+            <button
+              onClick={() => router.back()}
+              className="flex items-center space-x-1 sm:space-x-2 text-gray-300 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm sm:text-base">Back</span>
+            </button>
+          </div>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <button className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+              <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="relative h-[70vh] flex items-center">
+      <section className="relative min-h-screen flex items-center pt-16 sm:pt-20">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${getBackdropUrl(series.backdrop_path)})` }}
+          style={{ backgroundImage: `url(${getBackdropUrl(series.backdropPath)})` }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/40 sm:to-transparent"></div>
         </div>
-        <div className="relative z-10 px-4 md:px-8 max-w-2xl">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">{series.name}</h1>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="flex items-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <span className="text-sm">{series.vote_average.toFixed(1)}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-sm">{new Date(series.first_air_date).getFullYear()}</span>
-            </div>
-            {series.episode_run_time && series.episode_run_time.length > 0 && (
-              <div className="flex items-center space-x-1">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-sm">{series.episode_run_time[0]}m/ep</span>
+        <div className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-center">
+            {/* Series Poster */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <div className="relative aspect-[3/4] max-w-xs sm:max-w-sm mx-auto lg:mx-0">
+                <Image
+                  src={series.posterPath || "/placeholder.svg"}
+                  alt={series.title}
+                  fill
+                  className="object-cover rounded-lg shadow-2xl"
+                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
+                />
               </div>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {series.genres.slice(0, 3).map((g) => (
-              <span
-                key={g.id}
-                className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full"
-              >
-                {g.name}
-              </span>
-            ))}
-          </div>
-          <p className="text-lg mb-8 leading-relaxed max-w-xl">
-            {series.overview.slice(0, 150)}...
-          </p>
-          <div className="flex space-x-4">
-            <button className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg font-semibold rounded-md transition-colors flex items-center">
-              <Play className="w-5 h-5 mr-2" />
-              Play Trailer
-            </button>
-            <button className="border border-gray-400 text-white hover:bg-gray-800 px-8 py-3 text-lg bg-transparent rounded-md transition-colors flex items-center">
-              <Info className="w-5 h-5 mr-2" />
-              More Info
-            </button>
+            </div>
+            {/* Series Details */}
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-1 lg:order-2">
+              <div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 leading-tight">
+                  {series.title}
+                </h1>
+                {series.tagline && <p className="text-lg sm:text-xl text-gray-300 italic mb-4">{series.tagline}</p>}
+              </div>
+              {/* Series Meta */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
+                <div className="flex items-center space-x-1">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="font-semibold">{series.rating}</span>
+                  <span className="text-gray-400">({series.voteCount} votes)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <span>{series.firstAirDate}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span>{series.episodeRunTime}min episodes</span>
+                </div>
+                <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">{series.status}</span>
+                <span className="px-2 py-1 bg-blue-600/20 text-blue-400 text-xs rounded-full border border-blue-600/30">
+                  {series.numberOfSeasons} Season{series.numberOfSeasons !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {/* Genres */}
+              <div className="flex flex-wrap gap-2">
+                {series.genres.map((genre, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded-full border border-red-600/30"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+              {/* Description */}
+              <p className="text-base sm:text-lg leading-relaxed max-w-3xl text-gray-200">{series.overview}</p>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
+                  <Play className="w-5 h-5 mr-2" />
+                  Play Trailer
+                </button>
+                <button className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add to List
+                </button>
+                {series.homepage && (
+                  <a
+                    href={series.homepage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center"
+                  >
+                    <Globe className="w-5 h-5 mr-2" />
+                    Official Site
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Details Section */}
-      <main className="px-4 md:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <h2 className="text-3xl font-bold mb-4">Overview</h2>
-            <p className="text-gray-300 leading-relaxed">{series.overview}</p>
-
-            <h2 className="text-3xl font-bold mt-8 mb-4">Seasons ({series.number_of_seasons})</h2>
-            <div className="space-y-4">
-              {series.seasons.map(season => (
-                <Link key={season.id} href={`/tv/${id}/season/${season.season_number}`}>
-                  <div className="bg-gray-900 p-4 rounded-lg flex items-center space-x-4 cursor-pointer hover:bg-gray-800 transition-colors">
-                    <Image
-                      src={getImageUrl(season.poster_path)}
-                      alt={season.name}
-                      width={80}
-                      height={120}
-                      className="rounded"
-                    />
-                    <div>
-                      <h3 className="text-xl font-semibold">{season.name}</h3>
-                      <p className="text-sm text-gray-400">{new Date(season.air_date).getFullYear()} | {season.episode_count} Episodes</p>
-                      <p className="text-sm mt-2 line-clamp-2">{season.overview}</p>
+      {/* Seasons Section */}
+      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Seasons</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {series.seasons.map((season) => (
+            <Link key={season.seasonNumber} href={`/tv/${series.id}/season/${season.seasonNumber}`}>
+              <div className="group cursor-pointer transition-transform hover:scale-105">
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-3">
+                  <Image
+                    src={season.posterPath || "/placeholder.svg"}
+                    alt={season.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-between text-xs text-gray-300">
+                      <span>{season.episodeCount} episodes</span>
+                      <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
-                </Link>
-              ))}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm sm:text-base mb-1">{season.name}</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm">{season.airDate}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">{season.episodeCount} episodes</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Top Cast Section */}
+      {series.cast.length > 0 && (
+        <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Top Cast</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
+            {series.cast.slice(0, 6).map((actor, index) => {
+              const profileImageUrl = getImageUrl(actor.profilePath, "w185")
+              return (
+                <div key={actor.id ?? index} className="text-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-full overflow-hidden mx-auto mb-2 sm:mb-3 ring-2 ring-red-600/30 bg-gray-800">
+                    <Image
+                      src={profileImageUrl || "/placeholder.svg"}
+                      alt={actor.name || "Actor"}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+                    />
+                  </div>
+                  <p className="text-white font-medium text-xs sm:text-sm line-clamp-2">{actor.name}</p>
+                  <p className="text-gray-400 text-xs mt-1 line-clamp-2">{actor.character}</p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="bg-gray-900 px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            <div>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Company</h3>
+              <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+                <li>
+                  <Link href="/about" className="hover:text-white transition-colors">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/careers" className="hover:text-white transition-colors">
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/press" className="hover:text-white transition-colors">
+                    Press
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h3>
+              <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+                <li>
+                  <Link href="/help" className="hover:text-white transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/feedback" className="hover:text-white transition-colors">
+                    Feedback
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Legal</h3>
+              <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+                <li>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="hover:text-white transition-colors">
+                    Cookie Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Connect</h3>
+              <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Facebook
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Twitter
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Instagram
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold mb-4">Details</h2>
-            <div className="bg-gray-900 p-4 rounded-lg">
-              <p><strong>Status:</strong> {series.status}</p>
-              <p><strong>First Air Date:</strong> {series.first_air_date}</p>
-              <p><strong>Last Air Date:</strong> {series.last_air_date}</p>
-              <p><strong>Number of Episodes:</strong> {series.number_of_episodes}</p>
-              <p><strong>Original Language:</strong> {series.original_language.toUpperCase()}</p>
-            </div>
-
-            <h2 className="text-3xl font-bold mt-8 mb-4">Cast</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {credits.cast.slice(0, 10).map(person => (
-                <div key={person.id} className="flex items-center space-x-2">
-                  <Image
-                    src={getImageUrl(person.profile_path, 'w185')}
-                    alt={person.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <p className="font-semibold text-sm">{person.name}</p>
-                    <p className="text-xs text-gray-400">{person.character}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-gray-400">
+            <p>&copy; 2024 Movie Mania. All rights reserved.</p>
           </div>
         </div>
-      </main>
+      </footer>
     </div>
-  );
+  )
+}
+
+function formatSeries(seriesData) {
+  return {
+    id: seriesData.tvseriesId,
+    title: seriesData.title,
+    tagline: seriesData.tagline,
+    overview: seriesData.overview,
+    firstAirDate: seriesData.firstAirDate,
+    lastAirDate: seriesData.lastAirDate,
+    episodeRunTime: seriesData.episodeRunTime,
+    rating: seriesData.voteAverage ? Number.parseFloat(seriesData.voteAverage.toFixed(1)) : "N/A",
+    voteCount: seriesData.voteCount,
+    genres: seriesData.genres,
+    posterPath: seriesData.posterPath || "/poster.svg",
+    backdropPath: seriesData.backdropPath || "/backdrop.svg",
+    status: seriesData.status,
+    numberOfSeasons: seriesData.numberOfSeasons,
+    numberOfEpisodes: seriesData.numberOfEpisodes,
+    homepage: seriesData.homepage,
+    cast: seriesData.cast.map((actor) => ({
+      id: actor.creditId,
+      name: actor.originalName,
+      character: actor.character,
+      profilePath:
+        (typeof actor.profilePath === "string" ? actor.profilePath : actor.profilePath?.path) || "/profile.svg",
+    })),
+    seasons: seriesData.seasons.map((season) => ({
+      seasonNumber: season.seasonNumber,
+      name: season.name,
+      overview: season.overview,
+      airDate: season.airDate,
+      episodeCount: season.episodeCount,
+      posterPath: season.posterPath || "/placeholder.svg",
+    })),
+  }
 }
