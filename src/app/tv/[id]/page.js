@@ -92,7 +92,7 @@ export default function TvSeriesPage({ params }) {
             TV Series Not Found
           </h1>
           <p className="text-gray-400 mb-8 text-sm sm:text-base">
-            The TV series you're looking for doesn't exist.
+            The TV series you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/"
