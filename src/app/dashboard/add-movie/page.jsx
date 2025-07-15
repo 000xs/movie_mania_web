@@ -42,6 +42,7 @@ export default function AddMovie() {
       if (extractedId) {
         idToFetch = extractedId;
         setTmdbId(extractedId);
+
       } else {
         setError("Invalid TMDB URL. Please provide a valid movie URL.");
         return;
@@ -64,6 +65,8 @@ export default function AddMovie() {
         return;
       }
 
+      // console.log(movieDetails)
+
       setTitle(movieDetails.title || "");
       setOverview(movieDetails.overview || "");
       setPosterPath(movieDetails.poster_path ? `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}` : "");
@@ -75,12 +78,12 @@ export default function AddMovie() {
       setProductionCountries(movieDetails.production_countries || []);
       setSpokenLanguages(movieDetails.spoken_languages || []);
       const credits = await fetch(`/api/movies/${idToFetch}/credits`).then(res => res.json());
-      
+
       setCast(credits.cast ? credits.cast.slice(0, 5) : []);
       setCrew(credits.crew ? credits.crew.slice(0, 5) : []);
       // console.log(credits.cast, credits.crew);
       setRuntime(movieDetails.runtime?.toString() || "");
-      
+
       setSuccessMessage("Movie details fetched successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
 
@@ -114,45 +117,53 @@ export default function AddMovie() {
       subtitles,
       runtime: runtime,
     };
-
-    try {
-      const response = await fetch("/api/movies", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(movieData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create movie.");
+    // / Prepare download info for telegram notification
+    const telegramPayload = {
+      type: 'movie',
+      media: {
+        ...movieData,
+        downloads: movieData.downloads // ✅ keep as array
       }
+    };
+    const message_id = telegramSend(telegramPayload)
 
-      setSuccessMessage("Movie added successfully!");
-      router.push("/dashboard");
+    if (message_id) {
+      console.log(message_id)
+      setSuccessMessage("Telegram added succesfully!")
 
-      // Prepare download info for telegram notification
-      const downloadInfo = movieData.downloads.map((download) => {
-        const linksText = download.links.map(link => `- [${link.type}](${link.url})`).join('\n');
-        return `*${download.downloadType}* - ${download.title} (${download.quality})\n${linksText}`;
-      }).join('\n\n');
+      // save databse mive data 
 
-      const telegramPayload = {
-        type: 'movie',
-        media: {
-          ...movieData,
-          downloads: downloadInfo
+      try {
+        const response = await fetch("/api/movies", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(movieData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to create movie.");
+        } else {
+
+
         }
-      };
 
-      telegramSend(telegramPayload);
-    } catch (err) {
-      setError(err.message);
-      console.error("Error creating movie:", err);
-    } finally {
-      setLoading(false);
+        setSuccessMessage("Movie added successfully!");
+        // router.push("/dashboard");
+
+
+      } catch (err) {
+        setError(err.message);
+        console.error("Error creating movie:", err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setError("Tellegram add errr!")
     }
+
   };
 
   const telegramSend = async (data) => {
@@ -166,8 +177,12 @@ export default function AddMovie() {
       });
 
       if (!response.ok) {
+
         const errorData = await response.json();
+        const data = await response.json();
+        console.log(data)
         console.error("Failed to send Telegram notification:", errorData.error || "Unknown error");
+        return data.message_id
       } else {
         console.log("Telegram notification sent successfully!");
       }

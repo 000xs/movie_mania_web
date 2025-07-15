@@ -11,8 +11,6 @@ if (!botToken || !channelId) {
 const bot = botToken ? new TelegramBot(botToken, { polling: false }) : null;
 
 export async function POST(request) {
-  let type = "";
-
   const escapeHtml = (text) => {
     if (!text) return "";
     return text
@@ -30,7 +28,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    type = body.type;
+    const type = body.type;
     const media = body.media;
 
     if (!["movie", "tv"].includes(type)) {
@@ -62,7 +60,6 @@ export async function POST(request) {
     const genreList = genreNames
       .map((g) => `#${g.replace(/\s+/g, "")}`)
       .join(" | ");
-
     const fullPosterPath = posterPath?.startsWith("http")
       ? posterPath
       : `https://image.tmdb.org/t/p/original${posterPath}`;
@@ -81,63 +78,64 @@ export async function POST(request) {
 ${genreList}
     `.trim();
 
-    // Inline keyboard buttons
-    const buttons = [];
+    // -----------------------------
+    // ✅ GROUP DOWNLOAD BUTTONS BY TYPE (e.g., DIRECT, TELEGRAM)
+    // -----------------------------
+    const grouped = {};
 
-    // Flatten downloads array to get all links with quality and type
-    const flattenedDownloads = downloads.flatMap(download => {
-      if (download.links && Array.isArray(download.links)) {
-        return download.links.map(link => ({
-          url: link.url,
-          type: link.type || download.downloadType || 'DIRECT',
-          quality: download.quality || '720p',
-          format: link.format || 'WEB DL'
-        }));
-      } else if (download.url) {
-        return [{
-          url: download.url,
-          type: download.type || download.downloadType || 'DIRECT',
-          quality: download.quality || '720p',
-          format: download.format || 'WEB DL'
-        }];
-      }
-      return [];
+    downloads.forEach((dl) => {
+      if (!dl.link || !dl.link.startsWith("http")) return;
+
+      const type = dl.downloadType || "DIRECT";
+      const quality = dl.quality || "720p";
+      const videoType = dl.videoType || "";
+      const label = `${quality} ${videoType}`.trim();
+
+      if (!grouped[type]) grouped[type] = [];
+
+      grouped[type].push({
+        text: `${type} ${label}`,
+        url: dl.link,
+      });
     });
 
-    // One row for all download links
-    const downloadButtons = flattenedDownloads
-      .filter(dl => dl.url?.startsWith("http"))
-      .map(dl => ({
-        text: `${dl.type.toUpperCase()} ${dl.quality || "720p"} (${dl.format || "WEB DL"})`,
-        url: dl.url,
-      }));
-    if (downloadButtons.length > 0) {
-      buttons.push(downloadButtons);
-    }
+    // Sort preferred order
+    const typeOrder = ["TELEGRAM", "DRIVE", "DIRECT"];
+    const sortedGroups = Object.entries(grouped).sort(
+      ([a], [b]) => typeOrder.indexOf(a) - typeOrder.indexOf(b)
+    );
 
-    // One row for all subtitle links
+    const downloadButtons = sortedGroups.map(([_, btns]) => btns);
+
+    // -----------------------------
+    // ✅ SUBTITLE BUTTONS
+    // -----------------------------
     const subtitleButtons = subtitles
-      .filter(sub => sub.url?.startsWith("http"))
-      .map(sub => ({
-        text: `Sub - ${sub.language.toUpperCase()}`,
-        url: sub.url,
+      .filter((s) => s.url?.startsWith("http"))
+      .map((s) => ({
+        text: `Sub - ${s.language.toUpperCase()}`,
+        url: s.url,
       }));
-    if (subtitleButtons.length > 0) {
-      buttons.push(subtitleButtons);
-    }
 
     const replyMarkup = {
-      inline_keyboard: buttons,
+      inline_keyboard: [
+        ...downloadButtons,
+        ...(subtitleButtons.length > 0 ? [subtitleButtons] : []),
+      ],
     };
 
+    // -----------------------------
+    // ✅ SEND TO TELEGRAM
+    // -----------------------------
+    let result;
     if (fullPosterPath) {
-      await bot.sendPhoto(channelId, fullPosterPath, {
+      result = await bot.sendPhoto(channelId, fullPosterPath, {
         caption,
         parse_mode: "HTML",
         reply_markup: replyMarkup,
       });
     } else {
-      await bot.sendMessage(channelId, caption, {
+      result = await bot.sendMessage(channelId, caption, {
         parse_mode: "HTML",
         reply_markup: replyMarkup,
       });
@@ -146,13 +144,14 @@ ${genreList}
     return NextResponse.json(
       {
         message: `${type === "movie" ? "Movie" : "TV Series"} sent to Telegram`,
+        message_id: result,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error(`Error sending ${type} to Telegram:`, error);
+    console.error(`Error sending ${body?.type} to Telegram:`, error);
     return NextResponse.json(
-      { error: `Failed to send ${type} notification` },
+      { error: `Failed to send ${body?.type} notification` },
       { status: 500 }
     );
   }
