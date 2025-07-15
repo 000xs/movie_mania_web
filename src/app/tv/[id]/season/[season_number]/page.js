@@ -83,7 +83,7 @@ export default function SeasonPage({ params }) {
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <h1 className="text-2xl sm:text-4xl font-bold mb-4">Season Not Found</h1>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base">The season you&apos;re looking for doesn't exist.</p>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">The season you&apos;re looking for doesn&apos;t exist.</p>
           <Link
             href={`/tv/${seriesId}`}
             className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 sm:py-3 rounded-md transition-colors inline-flex items-center text-sm sm:text-base"
