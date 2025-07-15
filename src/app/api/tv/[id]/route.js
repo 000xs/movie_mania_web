@@ -16,6 +16,7 @@ import {
 
 export async function GET(request, { params }) {
   try {
+    const resolvedParams = await params;
     const { searchParams } = new URL(request.url);
     const source = searchParams.get('source') || 'local';
     const includeCredits = searchParams.get('include_credits') === 'true';
@@ -45,7 +46,7 @@ export async function GET(request, { params }) {
 
         // If only season is specified, get season details
         if (seasonNumber) {
-          const seasonDetails = await getTVSeasonDetails(params.id, seasonNumber);
+          const seasonDetails = await getTVSeasonDetails(resolvedParams.id, seasonNumber);
           
           if (!seasonDetails) {
             return NextResponse.json({ error: 'Season not found' }, { status: 404 });
@@ -59,7 +60,7 @@ export async function GET(request, { params }) {
         }
 
         // Get TV series details
-        const tvSeriesDetails = await getTVSeriesDetails(params.id);
+        const tvSeriesDetails = await getTVSeriesDetails(resolvedParams.id);
         
         if (!tvSeriesDetails) {
           return NextResponse.json({ error: 'TV Series not found' }, { status: 404 });
@@ -74,22 +75,22 @@ export async function GET(request, { params }) {
 
         // Include additional data if requested
         if (includeCredits) {
-          const credits = await getTVSeriesCredits(params.id);
+          const credits = await getTVSeriesCredits(resolvedParams.id);
           response.credits = formatCreditsData(credits);
         }
 
         if (includeVideos) {
-          const videos = await getTVSeriesVideos(params.id);
+          const videos = await getTVSeriesVideos(resolvedParams.id);
           response.videos = videos;
         }
 
         if (includeSimilar) {
-          const similar = await getSimilarTVSeries(params.id);
+          const similar = await getSimilarTVSeries(resolvedParams.id);
           response.similar = similar.map(tvSeries => formatTVSeriesData(tvSeries));
         }
 
         if (includeRecommendations) {
-          const recommendations = await getTVSeriesRecommendations(params.id);
+          const recommendations = await getTVSeriesRecommendations(resolvedParams.id);
           response.recommendations = recommendations.map(tvSeries => formatTVSeriesData(tvSeries));
         }
 
@@ -102,7 +103,8 @@ export async function GET(request, { params }) {
 
     // Local database query (default behavior)
     await connectDB();
-    const tvSeries = await TVSeries.findById(params.id);
+    const tvSeries = await TVSeries.findOne({ tvseriesId: resolvedParams.id });
+    
     
     if (!tvSeries) {
       return NextResponse.json({ error: 'TV Series not found' }, { status: 404 });
@@ -120,9 +122,10 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await connectDB();
+    const resolvedParams = await params;
     const data = await request.json();
     
-    const tvSeries = await TVSeries.findByIdAndUpdate(params.id, data, { new: true });
+    const tvSeries = await TVSeries.findByIdAndUpdate(resolvedParams.id, data, { new: true });
     
     if (!tvSeries) {
       return NextResponse.json({ error: 'TV Series not found' }, { status: 404 });
@@ -135,7 +138,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const resolvedParams = await params;
   try {
     await connectDB();
     const tvSeries = await TVSeries.findByIdAndDelete(id);

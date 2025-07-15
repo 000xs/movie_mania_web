@@ -72,8 +72,8 @@ export default function Home() {
     if (tvsers._id || tvsers.tvseriesId) {
       return {
         id: tvsers.tvseriesId || tvsers._id,
-        title: tvsers.title,
-        year: tvsers.releaseDate ? new Date(tvsers.releaseDate).getFullYear() : "N/A",
+        title: tvsers.name,
+        year: tvsers.firstAirDate ? new Date(tvsers.firstAirDate).getFullYear() : "N/A",
         rating: tvsers.voteAverage ? tvsers.voteAverage.toFixed(1) : "N/A",
         image: tvsers.posterPath || "/placeholder.svg",
         backdrop: tvsers.backdropPath || "/placeholder.svg",
@@ -386,6 +386,7 @@ export default function Home() {
         {/* TV Series Categories */}
         {tvSeriesCategories.map((category) => (
           <section key={category.title}>
+            {/* {console.log(category.series)} */}
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{category.title}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {category.series.map((series) => (

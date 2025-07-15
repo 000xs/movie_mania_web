@@ -2,7 +2,9 @@ import { getTVSeriesCredits } from "@/lib/tmdb-server";
 import { NextResponse } from "next/server";
 
 export async function GET(request, context) {
-  const { id } = context.params;
+ 
+  const params = await context.params;
+  const id = params.id;
 
   if (!id) {
     return NextResponse.json({ error: "TV Series ID is required" }, { status: 400 });
