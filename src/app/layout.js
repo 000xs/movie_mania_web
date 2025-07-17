@@ -1,21 +1,82 @@
-import { Inter } from "next/font/google";
+// import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
 
-const inter = Inter({ subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata = {
-  title: "Movie Mania Dashboard",
-  description: "Manage your movie and TV series collection",
+  title: {
+    default: 'Movie Mania LK - Download Sinhala Subtitles for Movies & TV Series',
+    template: '%s | Movie Mania LK',
+  },
+  description: 'Download Sinhala subtitles for the latest movies and TV series. Your ultimate source for Sinhala translated subtitles in Sri Lanka.',
+  keywords: ['Sinhala subtitles', 'movie subtitles', 'TV series subtitles', 'Sinhala films', 'Sri Lanka movies', 'subtitle download', 'සිංහල උපසිරැසි'],
+  authors: [{ name: 'Movie Mania LK' }],
+  creator: 'Movie Mania LK',
+  publisher: 'Movie Mania LK',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://www.moviemanialk.com',
+    siteName: 'Movie Mania LK',
+    title: 'Movie Mania LK - Download Sinhala Subtitles for Movies & TV Series',
+    description: 'Download Sinhala subtitles for the latest movies and TV series. Your ultimate source for Sinhala translated subtitles in Sri Lanka.',
+    images: [
+      {
+        url: 'https://www.moviemanialk.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Movie Mania LK - Sinhala Subtitles',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Movie Mania LK - Download Sinhala Subtitles for Movies & TV Series',
+    description: 'Download Sinhala subtitles for the latest movies and TV series. Your ultimate source for Sinhala translated subtitles in Sri Lanka.',
+    creator: '@moviemanialk',
+    images: ['https://www.moviemanialk.com/twitter-image.jpg'],
+  },
+  verification: {
+    google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+  },
+  alternates: {
+    canonical: 'https://www.moviemanialk.com',
+  },
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+} 
+) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        
-        <main>{children}</main>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
       </body>
     </html>
   );
 }
+
