@@ -1,8 +1,8 @@
-// app/(dashboard)/add-tv/page.jsx
 "use client";
 
 import { useState } from "react";
 import { getTVSeriesDetails, getTVSeasonDetails } from "@/lib/tmdb";
+import DownloadInput from "@/components/DownloadInput";
 import {
   Search,
   Plus,
@@ -63,28 +63,11 @@ export default function AddTvSeries() {
     productionCompanies: [],
     productionCountries: [],
     spokenLanguages: [],
-    downloads: [],
-    subtitles: [],
-    seasons: [],
-  });
-
-  /* ---------- batch state ---------- */
-  const [batchDl, setBatchDl] = useState({
-    quality: "1080p",
-    format: "MP4",
-    url: "",
-    title: "",
-  });
-  const [batchSub, setBatchSub] = useState({
-    language: "English",
-    url: "",
+    seasons: [],         // seasons -> episodes -> downloads / subtitles
   });
 
   /* ---------- helpers ---------- */
-  const extractTmdbIdFromUrl = (url) => {
-    const match = url.match(/tv\/(\d+)/);
-    return match ? match[1] : null;
-  };
+  const extractTmdbIdFromUrl = (url) => url.match(/tv\/(\d+)/)?.[1] ?? null;
   const toggleSeason = (sn) =>
     setExpandedSeasons((p) => ({ ...p, [sn]: !p[sn] }));
 
@@ -248,74 +231,6 @@ export default function AddTvSeries() {
     }
   };
 
-  /* ---------- download & subtitle helpers ---------- */
-  const addDownload = (sIdx, eIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].downloads.push({
-      title: "",
-      url: "",
-      quality: "1080p",
-      format: "MP4",
-    });
-    setTvData(copy);
-  };
-  const updateDownload = (sIdx, eIdx, dIdx, field, value) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].downloads[dIdx][field] = value;
-    setTvData(copy);
-  };
-  const removeDownload = (sIdx, eIdx, dIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].downloads.splice(dIdx, 1);
-    setTvData(copy);
-  };
-
-  const addSubtitleToEpisode = (sIdx, eIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].subtitles.push({
-      language: "English",
-      url: "",
-    });
-    setTvData(copy);
-  };
-  const updateSubtitleField = (sIdx, eIdx, subIdx, field, value) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].subtitles[subIdx][field] = value;
-    setTvData(copy);
-  };
-  const removeSubtitleFromEpisode = (sIdx, eIdx, subIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes[eIdx].subtitles.splice(subIdx, 1);
-    setTvData(copy);
-  };
-
-  /* ---------- batch helpers ---------- */
-  const applyBatchDownloads = (sIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes.forEach((ep) => {
-      ep.downloads.push({
-        title: `${batchDl.title} S${String(
-          copy.seasons[sIdx].seasonNumber
-        ).padStart(2, "0")}E${String(ep.episodeNumber).padStart(2, "0")}`,
-        url: `${batchDl.url}${ep.episodeNumber}`,
-        quality: batchDl.quality,
-        format: batchDl.format,
-      });
-    });
-    setTvData(copy);
-  };
-
-  const applyBatchSubtitles = (sIdx) => {
-    const copy = { ...tvData };
-    copy.seasons[sIdx].episodes.forEach((ep) => {
-      ep.subtitles.push({
-        language: batchSub.language,
-        url: `${batchSub.url}${ep.episodeNumber}.vtt`,
-      });
-    });
-    setTvData(copy);
-  };
-
   /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -344,8 +259,16 @@ export default function AddTvSeries() {
         episodes: s.episodes.map((e) => ({
           ...e,
           airDate: e.airDate ? new Date(e.airDate) : null,
-          downloads: e.downloads || [],
-          subtitles: e.subtitles || [],
+          downloads: (e.downloads || []).filter(Boolean).map((d) => ({
+            downloadType: d.downloadType || "DIRECT",
+            videoType: d.videoType || "WEB_DL",
+            quality: d.quality || "1080p",
+            link: d.link || "https://placeholder.invalid",
+          })),
+          subtitles: (e.subtitles || []).filter(Boolean).map((s) => ({
+            language: s.language || "English",
+            url: s.url || "https://placeholder.invalid",
+          })),
         })),
       })),
     };
@@ -417,7 +340,7 @@ export default function AddTvSeries() {
             />
             <input
               type="text"
-              placeholder="or TMDB URL (e.g. https://www.themoviedb.org/tv/1399)"
+              placeholder="or TMDB URL"
               value={tmdbUrl}
               onChange={(e) => setTmdbUrl(e.target.value)}
               className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-red-500"
@@ -438,9 +361,9 @@ export default function AddTvSeries() {
 
         {/* Main Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Info */}
           {tvData.name && (
             <>
+              {/* Basic Info */}
               <div className="bg-gray-900/50 rounded-2xl p-6">
                 <div className="flex items-center mb-4">
                   <Film className="h-6 w-6 text-red-500 mr-2" />
@@ -547,7 +470,7 @@ export default function AddTvSeries() {
                   />
                 </div>
 
-                {/* Cast */}
+                {/* Cast / Crew thumbnails */}
                 {tvData.cast.length > 0 && (
                   <div className="mt-6">
                     <h3 className="flex items-center mb-2">
@@ -570,8 +493,6 @@ export default function AddTvSeries() {
                     </div>
                   </div>
                 )}
-
-                {/* Crew */}
                 {tvData.crew.length > 0 && (
                   <div className="mt-6">
                     <h3 className="flex items-center mb-2">
@@ -621,85 +542,6 @@ export default function AddTvSeries() {
 
                     {expandedSeasons[season.seasonNumber] && (
                       <div className="p-3 border-t border-gray-700">
-                        {/* —— Season-level batch downloads —— */}
-                        <div className="mb-4 p-3 bg-gray-800 rounded-lg">
-                          <h5 className="text-sm font-semibold mb-2 flex items-center">
-                            <Download className="w-4 h-4 mr-1" /> Batch Downloads
-                          </h5>
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm">
-                            <input
-                              className="bg-gray-700 rounded px-2 py-1"
-                              placeholder="Title prefix"
-                              value={batchDl.title}
-                              onChange={(e) => setBatchDl({ ...batchDl, title: e.target.value })}
-                            />
-                            <input
-                              className="bg-gray-700 rounded px-2 py-1"
-                              placeholder="URL prefix"
-                              value={batchDl.url}
-                              onChange={(e) => setBatchDl({ ...batchDl, url: e.target.value })}
-                            />
-                            <select
-                              value={batchDl.quality}
-                              onChange={(e) => setBatchDl({ ...batchDl, quality: e.target.value })}
-                              className="bg-gray-700 rounded px-2 py-1"
-                            >
-                              <option>4K</option>
-                              <option>1080p</option>
-                              <option>720p</option>
-                              <option>480p</option>
-                            </select>
-                            <select
-                              value={batchDl.format}
-                              onChange={(e) => setBatchDl({ ...batchDl, format: e.target.value })}
-                              className="bg-gray-700 rounded px-2 py-1"
-                            >
-                              <option>MP4</option>
-                              <option>MKV</option>
-                              <option>AVI</option>
-                            </select>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => applyBatchDownloads(sIdx)}
-                            className="mt-2 text-xs bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
-                          >
-                            Apply to all episodes in season
-                          </button>
-                        </div>
-
-                        {/* Batch Subtitles */}
-                        <div className="mb-4 p-3 bg-gray-800 rounded-lg">
-                          <h5 className="text-sm font-semibold mb-2 flex items-center">
-                            <FileText className="w-4 h-4 mr-1" /> Batch Subtitles
-                          </h5>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                            <input
-                              className="w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400"
-                              placeholder="Language"
-                              value={batchSub.language}
-                              onChange={(e) =>
-                                setBatchSub({ ...batchSub, language: e.target.value })
-                              }
-                            />
-                            <input
-                              className="w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400"
-                              placeholder="URL prefix"
-                              value={batchSub.url}
-                              onChange={(e) =>
-                                setBatchSub({ ...batchSub, url: e.target.value })
-                              }
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => applyBatchSubtitles(sIdx)}
-                            className="mt-2 text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-                          >
-                            Apply to all episodes in season
-                          </button>
-                        </div>
-
                         {/* Episodes */}
                         <div className="space-y-4">
                           {season.episodes.map((ep, eIdx) => (
@@ -727,164 +569,34 @@ export default function AddTvSeries() {
 
                               {/* Downloads */}
                               <div className="mt-3">
-                                <div className="flex justify-between items-center mb-2">
-                                  <h5 className="text-sm font-medium flex items-center">
-                                    <Download className="w-4 h-4 mr-1" />{" "}
-                                    Downloads ({ep.downloads.length})
-                                  </h5>
-                                  <button
-                                    type="button"
-                                    onClick={() => addDownload(sIdx, eIdx)}
-                                    className="text-green-400 text-sm flex items-center"
-                                  >
-                                    <Plus className="w-3 h-3 mr-1" /> Add
-                                  </button>
-                                </div>
-                                <div className="space-y-2">
-                                  {ep.downloads.map((dl, dIdx) => (
-                                    <div
-                                      key={dIdx}
-                                      className="grid grid-cols-12 gap-2 items-center text-sm"
-                                    >
-                                      <input
-                                        className="col-span-4 bg-gray-700 rounded px-2 py-1"
-                                        placeholder="Title"
-                                        value={dl.title}
-                                        onChange={(e) =>
-                                          updateDownload(
-                                            sIdx,
-                                            eIdx,
-                                            dIdx,
-                                            "title",
-                                            e.target.value
-                                          )
-                                        }
-                                      />
-                                      <input
-                                        className="col-span-4 bg-gray-700 rounded px-2 py-1"
-                                        placeholder="URL"
-                                        value={dl.url}
-                                        onChange={(e) =>
-                                          updateDownload(
-                                            sIdx,
-                                            eIdx,
-                                            dIdx,
-                                            "url",
-                                            e.target.value
-                                          )
-                                        }
-                                      />
-                                      <select
-                                        className="col-span-2 bg-gray-700 rounded px-2 py-1"
-                                        value={dl.quality}
-                                        onChange={(e) =>
-                                          updateDownload(
-                                            sIdx,
-                                            eIdx,
-                                            dIdx,
-                                            "quality",
-                                            e.target.value
-                                          )
-                                        }
-                                      >
-                                        <option>4K</option>
-                                        <option>1080p</option>
-                                        <option>720p</option>
-                                        <option>480p</option>
-                                      </select>
-                                      <select
-                                        className="col-span-1 bg-gray-700 rounded px-2 py-1"
-                                        value={dl.format}
-                                        onChange={(e) =>
-                                          updateDownload(
-                                            sIdx,
-                                            eIdx,
-                                            dIdx,
-                                            "format",
-                                            e.target.value
-                                          )
-                                        }
-                                      >
-                                        <option>MP4</option>
-                                        <option>MKV</option>
-                                        <option>AVI</option>
-                                      </select>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          removeDownload(sIdx, eIdx, dIdx)
-                                        }
-                                        className="col-span-1 flex justify-center text-red-400"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
+                                <DownloadInput
+                                  downloads={ep.downloads}
+                                  setDownloads={(newDownloads) => {
+                                    const next = [...tvData.seasons];
+                                    next[sIdx].episodes[eIdx].downloads =
+                                      newDownloads;
+                                    setTvData({ ...tvData, seasons: next });
+                                  }}
+                                />
                               </div>
 
                               {/* Subtitles */}
-                              <div className="mt-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <h6 className="text-xs font-semibold">
-                                    Subtitles ({ep.subtitles.length})
-                                  </h6>
-                                  <button
-                                    type="button"
-                                    onClick={() => addSubtitleToEpisode(sIdx, eIdx)}
-                                    className="text-xs text-blue-400 flex items-center"
-                                  >
-                                    <Plus className="w-3 h-3 mr-1" /> Add
-                                  </button>
-                                </div>
-                                {ep.subtitles.map((sub, subIdx) => (
-                                  <div
-                                    key={subIdx}
-                                    className="grid grid-cols-12 gap-2 text-xs"
-                                  >
-                                    <input
-                                      className="col-span-5 bg-gray-700 rounded px-2 py-1"
-                                      placeholder="Language"
-                                      value={sub.language}
-                                      onChange={(e) =>
-                                        updateSubtitleField(
-                                          sIdx,
-                                          eIdx,
-                                          subIdx,
-                                          "language",
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                    <input
-                                      className="col-span-6 bg-gray-700 rounded px-2 py-1"
-                                      placeholder="Subtitle URL"
-                                      value={sub.url}
-                                      onChange={(e) =>
-                                        updateSubtitleField(
-                                          sIdx,
-                                          eIdx,
-                                          subIdx,
-                                          "url",
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        removeSubtitleFromEpisode(
-                                          sIdx,
-                                          eIdx,
-                                          subIdx
-                                        )
-                                      }
-                                      className="col-span-1 flex justify-center text-red-400"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                ))}
+                              <div className="mt-3">
+                                <h5 className="text-sm font-medium mb-1">
+                                  Subtitles
+                                </h5>
+                                <DownloadInput
+                                  downloads={ep.subtitles}
+                                  setDownloads={(newSubs) => {
+                                    const next = [...tvData.seasons];
+                                    next[sIdx].episodes[eIdx].subtitles =
+                                      newSubs.map((s) => ({
+                                        language: s.downloadType || "",
+                                        url: s.link || "",
+                                      }));
+                                    setTvData({ ...tvData, seasons: next });
+                                  }}
+                                />
                               </div>
                             </div>
                           ))}
@@ -939,9 +651,3 @@ function Input({ label, icon, value, onChange, ...rest }) {
     </div>
   );
 }
-const InputSm = ({ className, ...rest }) => (
-  <input
-    {...rest}
-    className={`w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400 ${className}`}
-  />
-);

@@ -185,16 +185,25 @@ const tvSeriesSchema = new mongoose.Schema(
     episodeRunTime: [{ type: Number }],
     inProduction: { type: Boolean, default: false },
     type: { type: String },
-    downloads: {
-      type: [
-        {
-          quality: { type: String, required: true },
-          format: { type: String, required: true },
-          url: { type: String, required: true },
+    downloads: [
+      {
+        downloadType: {
+          type: String,
+          required: true,
+          enum: ["DIRECT", "TELEGRAM", "DRIVE"],
         },
-      ],
-      default: null,
-    },
+        videoType: {
+          type: String,
+          required: true,
+        },
+        quality: {
+          type: String,
+          required: true,
+        },
+        link: { type: String, required: true },
+      },
+    ],
+
     subtitles: [
       {
         language: String, // e.g., "English", "Sinhala"
@@ -251,6 +260,25 @@ const tvSeriesSchema = new mongoose.Schema(
         overview: String,
         posterPath: String,
         seasonNumber: Number,
+        downloads: [
+          {
+            downloadType: {
+              type: String,
+              required: true,
+              enum: ["DIRECT", "TELEGRAM", "DRIVE"],
+            },
+            videoType: {
+              type: String,
+              required: true,
+            },
+            quality: {
+              type: String,
+              required: true,
+            },
+            link: { type: String, required: true },
+          },
+        ],
+
         episodes: [
           {
             episodeId: { type: String, unique: true, required: true },
@@ -263,16 +291,25 @@ const tvSeriesSchema = new mongoose.Schema(
             voteAverage: { type: Number },
             voteCount: { type: Number },
             runtime: { type: Number },
-            downloads: {
-              type: [
-                {
-                  quality: { type: String, required: true },
-                  format: { type: String, required: true },
-                  url: { type: String, required: true },
+            downloads: [
+              {
+                downloadType: {
+                  type: String,
+                  required: true,
+                  enum: ["DIRECT", "TELEGRAM", "DRIVE"],
                 },
-              ],
-              default: null,
-            },
+                videoType: {
+                  type: String,
+                  required: true,
+                },
+                quality: {
+                  type: String,
+                  required: true,
+                },
+                link: { type: String, required: true },
+              },
+            ],
+
             subtitles: [
               {
                 language: String,
@@ -295,4 +332,3 @@ if (mongoose.models.TVSeries) {
 }
 
 export default mongoose.model("TVSeries", tvSeriesSchema);
-

@@ -119,24 +119,20 @@ export async function GET(request, { params }) {
   }
 }
 
+/* ---------- PUT /api/tv/:id ---------- */
 export async function PUT(request, { params }) {
-  try {
-    await connectDB();
-    const resolvedParams = await params;
-    const data = await request.json();
-    
-    const tvSeries = await TVSeries.findByIdAndUpdate(resolvedParams.id, data, { new: true });
-    
-    if (!tvSeries) {
-      return NextResponse.json({ error: 'TV Series not found' }, { status: 404 });
-    }
-    
-    return NextResponse.json(tvSeries);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-}
+  const resolvedParams = await params;
+  const data = await request.json();
 
+  await connectDB();
+  const updated = await TVSeries.findOneAndUpdate(
+    { tvseriesId: resolvedParams.id },
+    data,
+    { new: true }
+  );
+  if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(updated);
+}
 export async function DELETE(request, { params }) {
   const resolvedParams = await params;
   try {

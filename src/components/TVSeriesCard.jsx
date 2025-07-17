@@ -39,7 +39,7 @@ const TVSeriesCard = ({ series }) => {
         <Link href={`/tv/${series.id}`} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
           View Details
         </Link>
-        <Link href={`/dashboard/edit-tv/${series.id}`} className="text-yellow-400 hover:text-yellow-300 text-sm font-medium">
+        <Link href={`/dashboard/edit-tv/${series.tvseriesId}`} className="text-yellow-400 hover:text-yellow-300 text-sm font-medium">
           Edit
         </Link>
         <button

@@ -1,271 +1,265 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getTVSeriesDetails } from "@/lib/tmdb-server";
-import InputField from "@/components/InputField";
-import SubmitButton from "@/components/SubmitButton";
+import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import DownloadInput from "@/components/DownloadInput";
+import {
+  ArrowLeft,
+  Save,
+  Search,
+  Plus,
+  X,
+  Star,
+  Calendar,
+  Clock,
+  Tv,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
-export default function EditTVSeries({ params }) {
-  const { id } = params;
-  const [name, setName] = useState("");
-  const [overview, setOverview] = useState("");
-  const [posterPath, setPosterPath] = useState("");
-  const [backdropPath, setBackdropPath] = useState("");
-  const [firstAirDate, setFirstAirDate] = useState("");
-  const [voteAverage, setVoteAverage] = useState("");
-  const [genres, setGenres] = useState([]);
-  const [cast, setCast] = useState([]);
-  const [crew, setCrew] = useState([]);
-  const [downloads, setDownloads] = useState([]);
-  const [subtitles, setSubtitles] = useState([]);
-  const [tmdbId, setTmdbId] = useState("");
-  const [tmdbUrl, setTmdbUrl] = useState("");
-  const [episodeRunTime, setEpisodeRunTime] = useState([]);
-  const [networks, setNetworks] = useState([]);
-  const [seasons, setSeasons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+export default function EditTvSeries() {
   const router = useRouter();
+  const { id } = useParams();
 
+  /* ---------- state ---------- */
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [tvData, setTvData] = useState({
+    name: "",
+    overview: "",
+    posterPath: "",
+    backdropPath: "",
+    firstAirDate: "",
+    lastAirDate: "",
+    voteAverage: "",
+    genres: [],
+    seasons: [],
+  });
+
+  /* ---------- fetch ---------- */
   useEffect(() => {
-    const fetchTVSeriesData = async () => {
-      try {
-        const res = await fetch(`/api/tv/${id}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch TV series data.");
-        }
-        const data = await res.json();
-        const series = data; // Assuming the API returns the TV series object directly
-
-        setName(series.name || "");
-        setOverview(series.overview || "");
-        setPosterPath(series.posterPath || "");
-        setBackdropPath(series.backdropPath || "");
-        setFirstAirDate(series.firstAirDate ? series.firstAirDate.split('T')[0] : ""); // Format date for input type="date"
-        setVoteAverage(series.voteAverage ? series.voteAverage.toString() : "");
-        setGenres(series.genres?.map(genre => genre.name) || []);
-        setCast(series.cast || []);
-        setCrew(series.crew || []);
-        setDownloads(series.downloads || []);
-        setSubtitles(series.subtitles || []);
-        setTmdbId(series.tmdbId || ""); // Assuming tmdbId is stored in the series object
-        setEpisodeRunTime(series.episodeRunTime || []);
-        setNetworks(series.networks?.map(network => network.name) || []);
-        setSeasons(series.seasons || []);
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching TV series for edit:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchTVSeriesData();
-    }
+    fetch(`/api/tv/${id}`)
+      .then((r) => r.json())
+      .then((d) => setTvData(d))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const extractTmdbIdFromUrl = (url) => {
-    const match = url.match(/(movie|tv)\/(\d+)/);
-    return match ? match[2] : null;
+  /* ---------- helpers ---------- */
+  const toggleSeason = (sn) =>
+    setTvData((prev) => ({
+      ...prev,
+      seasons: prev.seasons.map((s) =>
+        s.seasonNumber === sn ? { ...s, _expanded: !s._expanded } : s
+      ),
+    }));
+
+  const addSubtitleToEpisode = (sIdx, eIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles.push({
+      language: "English",
+      url: "",
+    });
+    setTvData(copy);
   };
 
-  const handleTmdbFetch = async () => {
-    let idToFetch = tmdbId;
-
-    if (tmdbUrl) {
-      const extractedId = extractTmdbIdFromUrl(tmdbUrl);
-      if (extractedId) {
-        idToFetch = extractedId;
-        setTmdbId(extractedId);
-      } else {
-        setError("Invalid TMDB URL. Please provide a valid TV series URL.");
-        return;
-      }
-    }
-
-    if (!idToFetch) {
-      setError("Please enter a TMDB ID or URL.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const tvSeriesDetails = await getTVSeriesDetails(idToFetch);
-
-      if (!tvSeriesDetails) {
-        setError("TV series not found on TMDB.");
-        return;
-      }
-
-      setName(tvSeriesDetails.name || "");
-      setOverview(tvSeriesDetails.overview || "");
-      setPosterPath(tvSeriesDetails.poster_path ? `https://image.tmdb.org/t/p/w500${tvSeriesDetails.poster_path}` : "");
-      setBackdropPath(tvSeriesDetails.backdrop_path ? `https://image.tmdb.org/t/p/w1280${tvSeriesDetails.backdrop_path}` : "");
-      setFirstAirDate(tvSeriesDetails.first_air_date || "");
-      setVoteAverage(tvSeriesDetails.vote_average ? tvSeriesDetails.vote_average.toString() : "");
-      setGenres(tvSeriesDetails.genres?.map(genre => genre.name) || []);
-      const credits = await fetch(`/api/tv/${idToFetch}/credits`).then(res => res.json());
-      setCast(credits.cast?.map(member => member.name) || []);
-      setCrew(credits.crew?.map(member => member.name) || []);
-      setEpisodeRunTime(tvSeriesDetails.episode_run_time || []);
-      setNetworks(tvSeriesDetails.networks?.map(network => network.name) || []);
-      setSeasons(tvSeriesDetails.seasons || []);
-
-    } catch (err) {
-      setError("Failed to fetch TV series details from TMDB.");
-      console.error("Error fetching TV series details:", err);
-    } finally {
-      setLoading(false);
-    }
+  const updateSubtitle = (sIdx, eIdx, subIdx, field, value) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles[subIdx][field] = value;
+    setTvData(copy);
   };
 
+  const removeSubtitle = (sIdx, eIdx, subIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles.splice(subIdx, 1);
+    setTvData(copy);
+  };
+
+  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setSubmitting(true);
 
-    const tvSeriesData = {
-      name,
-      overview,
-      posterPath,
-      backdropPath,
-      firstAirDate,
-      voteAverage: parseFloat(voteAverage),
-      genres: genres.map(genre => ({ name: genre })),
-      cast,
-      crew,
-      downloads,
-      subtitles,
-      tmdbId, // Include tmdbId in the data to be saved
-      episodeRunTime,
-      networks: networks.map(network => ({ name: network })),
-      seasons,
+    /* safe defaults */
+    const payload = {
+      ...tvData,
+      seasons: tvData.seasons.map((s) => ({
+        ...s,
+        episodes: s.episodes.map((ep) => ({
+          ...ep,
+          downloads: (ep.downloads || []).map((d) => ({
+            downloadType: d.downloadType || "DIRECT",
+            videoType: d.videoType || "WEB_DL",
+            quality: d.quality || "1080p",
+            link: d.link || "https://placeholder.invalid",
+          })),
+          subtitles: (ep.subtitles || []).map((sub) => ({
+            language: sub.language || "English",
+            url: sub.url || "https://placeholder.invalid",
+          })),
+        })),
+      })),
     };
 
     try {
-      const response = await fetch(`/api/tv/${id}`, {
+      const res = await fetch(`/api/tv/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(tvSeriesData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update TV series.");
-      }
-
-      const data = await response.json();
-      router.push("/dashboard");
+      if (!res.ok) throw new Error("Failed to update");
+      alert("Series updated!");
+      router.push(`/tv/${id}`);
     } catch (err) {
-      setError(err.message);
-      console.error("Error updating TV series:", err);
+      alert(err.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl">Loading TV series data...</p>
-        </div>
+        <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  }
 
+  /* ---------- render ---------- */
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <h1 className="text-3xl font-bold mb-4">Edit TV Series</h1>
-      {error && <div className="bg-red-500 text-white p-2 mb-4 rounded">{error}</div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <InputField label="Title" id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <InputField label="Overview" id="overview" type="textarea" value={overview} onChange={(e) => setOverview(e.target.value)} rows="3" />
-        <InputField label="Poster URL" id="posterPath" value={posterPath} onChange={(e) => setPosterPath(e.target.value)} />
-        <InputField label="Backdrop URL" id="backdropPath" value={backdropPath} onChange={(e) => setBackdropPath(e.target.value)} />
-        <InputField label="First Air Date" id="firstAirDate" type="date" value={firstAirDate} onChange={(e) => setFirstAirDate(e.target.value)} />
-        <InputField label="Rating" id="voteAverage" type="number" value={voteAverage} onChange={(e) => setVoteAverage(e.target.value)} step="0.1" />
-        <InputField label="Genres (comma separated)" id="genres" value={genres.join(",")} onChange={(e) => setGenres(e.target.value.split(",").map(g => g.trim()))} />
-        <InputField label="Cast (comma separated)" id="cast" value={cast.join(",")} onChange={(e) => setCast(e.target.value.split(",").map(c => c.trim()))} />
-        <InputField label="Crew (comma separated)" id="crew" value={crew.join(",")} onChange={(e) => setCrew(e.target.value.split(",").map(c => c.trim()))} />
-        <InputField
-          label="Downloads (JSON array)"
-          id="downloads"
-          type="textarea"
-          value={JSON.stringify(downloads, null, 2)}
-          onChange={(e) => {
-            try {
-              setDownloads(JSON.parse(e.target.value));
-            } catch (error) {
-              // Handle JSON parsing errors
-            }
-          }}
-          rows="3"
-        />
-        <InputField
-          label="Subtitles (JSON array)"
-          id="subtitles"
-          type="textarea"
-          value={JSON.stringify(subtitles, null, 2)}
-          onChange={(e) => {
-            try {
-              setSubtitles(JSON.parse(e.target.value));
-            } catch (error) {
-              // Handle JSON parsing errors
-            }
-          }}
-          rows="3"
-        />
-        <InputField
-          label="Episode Run Time (JSON array)"
-          id="episodeRunTime"
-          type="textarea"
-          value={JSON.stringify(episodeRunTime, null, 2)}
-          onChange={(e) => {
-            try {
-              setEpisodeRunTime(JSON.parse(e.target.value));
-            } catch (error) {
-              // Handle JSON parsing errors
-            }
-          }}
-          rows="3"
-        />
-        <InputField label="Networks (comma separated)" id="networks" value={networks.join(",")} onChange={(e) => setNetworks(e.target.value.split(",").map(n => n.trim()))} />
-        <InputField
-          label="Seasons (JSON array)"
-          id="seasons"
-          type="textarea"
-          value={JSON.stringify(seasons, null, 2)}
-          onChange={(e) => {
-            try {
-              setSeasons(JSON.parse(e.target.value));
-            } catch (error) {
-              // Handle JSON parsing errors
-            }
-          }}
-          rows="3"
-        />
-        <div>
-          <InputField label="TMDB ID" id="tmdbId" value={tmdbId} onChange={(e) => setTmdbId(e.target.value)} />
-          <InputField label="TMDB URL" id="tmdbUrl" value={tmdbUrl} onChange={(e) => setTmdbUrl(e.target.value)} placeholder="e.g., https://www.themoviedb.org/tv/12345" />
+    <div className="min-h-screen bg-black text-white">
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
+        <div className="flex items-center justify-between px-6 py-4">
+          <Link href={`/tv/${id}`} className="flex items-center space-x-2 text-gray-300 hover:text-white">
+            <ArrowLeft className="w-5 h-5" />
+            <span>Edit {tvData.name}</span>
+          </Link>
+        </div>
+      </header>
+
+      <form onSubmit={handleSubmit} className="max-w-6xl mx-auto p-6 space-y-10 pt-24">
+        {/* Basic Info */}
+        <div className="bg-gray-900/50 rounded-2xl p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <Star className="w-6 h-6 mr-3 text-red-500" /> Basic Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Title" value={tvData.name} onChange={(v) => setTvData({ ...tvData, name: v })} required />
+            <Input label="Original Title" value={tvData.originalName} onChange={(v) => setTvData({ ...tvData, originalName: v })} />
+            <Input type="date" label="First Air Date" value={tvData.firstAirDate} onChange={(v) => setTvData({ ...tvData, firstAirDate: v })} />
+            <Input type="date" label="Last Air Date" value={tvData.lastAirDate} onChange={(v) => setTvData({ ...tvData, lastAirDate: v })} />
+            <Input type="number" step="0.1" label="Rating" value={tvData.voteAverage} onChange={(v) => setTvData({ ...tvData, voteAverage: v })} />
+            <Input type="number" label="Runtime (min)" value={tvData.episodeRunTime?.[0] || ""} onChange={(v) => setTvData({ ...tvData, episodeRunTime: [Number(v)] })} />
+            <Input label="Poster URL" value={tvData.posterPath} onChange={(v) => setTvData({ ...tvData, posterPath: v })} />
+            <Input label="Backdrop URL" value={tvData.backdropPath} onChange={(v) => setTvData({ ...tvData, backdropPath: v })} />
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium mb-1">Overview</label>
+            <textarea rows={4} value={tvData.overview} onChange={(e) => setTvData({ ...tvData, overview: e.target.value })} className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Seasons */}
+        {tvData.seasons.map((season, sIdx) => (
+          <div key={season.seasonNumber} className="bg-gray-900/50 rounded-lg p-4">
+            <button type="button" onClick={() => toggleSeason(season.seasonNumber)} className="w-full flex justify-between items-center mb-3">
+              <span className="font-semibold">Season {season.seasonNumber} – {season.name}</span>
+              {season._expanded ? <ChevronUp /> : <ChevronDown />}
+            </button>
+
+            {season._expanded && (
+              <>
+                {/* Episodes */}
+                {season.episodes.map((ep, eIdx) => (
+                  <div key={ep.episodeNumber} className="mt-4 p-3 bg-gray-800 rounded">
+                    <h4 className="font-semibold">Ep {ep.episodeNumber}: {ep.name}</h4>
+
+                    {/* Downloads */}
+                    <div className="mt-2">
+                      <label className="text-sm font-medium mb-1">Downloads</label>
+                      <DownloadInput
+                        downloads={ep.downloads}
+                        setDownloads={(newDl) => {
+                          const next = [...tvData.seasons];
+                          next[sIdx].episodes[eIdx].downloads = newDl;
+                          setTvData({ ...tvData, seasons: next });
+                        }}
+                      />
+                    </div>
+
+                    {/* Subtitles */}
+                    <div className="mt-3">
+                      <h5 className="text-sm font-medium mb-1">Subtitles</h5>
+                      {ep.subtitles.map((sub, subIdx) => (
+                        <div key={subIdx} className="grid grid-cols-11 gap-2 text-xs mb-1">
+                          <input
+                            placeholder="Language"
+                            value={sub.language}
+                            onChange={(e) =>
+                              updateSubtitle(sIdx, eIdx, subIdx, "language", e.target.value)
+                            }
+                            className="col-span-5 bg-gray-700 rounded px-2 py-1"
+                          />
+                          <input
+                            placeholder="Subtitle URL"
+                            value={sub.url}
+                            onChange={(e) =>
+                              updateSubtitle(sIdx, eIdx, subIdx, "url", e.target.value)
+                            }
+                            className="col-span-5 bg-gray-700 rounded px-2 py-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSubtitle(sIdx, eIdx, subIdx)}
+                            className="col-span-1 flex justify-center items-center text-red-400"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => addSubtitleToEpisode(sIdx, eIdx)}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-xs px-2 py-1 rounded"
+                      >
+                        + Add Subtitle
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        ))}
+
+        {/* Submit */}
+        <div className="flex justify-center">
           <button
-            type="button"
-            onClick={handleTmdbFetch}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 mt-2"
+            type="submit"
+            disabled={submitting}
+            className="px-8 py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-xl flex items-center"
           >
-            {loading ? "Fetching..." : "Fetch from TMDB"}
+            {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />}
+            <Save className="w-5 h-5 mr-2" /> Update Series
           </button>
         </div>
-        <SubmitButton loading={loading}>Update TV Series</SubmitButton>
       </form>
+    </div>
+  );
+}
+
+/* ---------- tiny helper ---------- */
+function Input({ label, type = "text", value, onChange, required = false }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+        required={required}
+        className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500"
+      />
     </div>
   );
 }

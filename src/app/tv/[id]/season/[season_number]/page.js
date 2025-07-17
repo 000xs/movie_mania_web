@@ -50,23 +50,18 @@ export default function SeasonPage({ params }) {
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-6 py-4">
-          <Link
-            href={`/tv/${id}`}
-            className="flex items-center space-x-2 text-gray-300 hover:text-white"
-          >
+          <Link href={`/tv/${id}`} className="flex items-center space-x-2 text-gray-300 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
             <span>Back to {data.name}</span>
           </Link>
         </div>
       </header>
-
+  
       {/* Hero */}
       <section className="relative min-h-[60vh] flex items-center pt-20">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(https://image.tmdb.org/t/p/w1280${data.backdropPath})`,
-          }}
+          style={{ backgroundImage: `url(https://image.tmdb.org/t/p/w1280${data.backdropPath})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
         </div>
@@ -82,8 +77,7 @@ export default function SeasonPage({ params }) {
             <h1 className="text-5xl font-bold">{season.name}</h1>
             <div className="flex space-x-4 text-sm">
               <span className="flex items-center space-x-1">
-                <Star className="w-4 text-yellow-400" />{" "}
-                {data.voteAverage?.toFixed(1)}
+                <Star className="w-4 text-yellow-400" /> {data.voteAverage?.toFixed(1)}
               </span>
               <span className="flex items-center space-x-1">
                 <Calendar className="w-4" /> {season.airDate?.split("T")[0]}
@@ -96,16 +90,13 @@ export default function SeasonPage({ params }) {
           </div>
         </div>
       </section>
-
+  
       {/* Episodes */}
       <section className="px-6 py-16 max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-8">Episodes</h2>
         <div className="space-y-6">
           {season.episodes.map((ep) => (
-            <div
-              key={ep.episodeNumber}
-              className="bg-gray-900/50 rounded-lg p-6"
-            >
+            <div key={ep.episodeNumber} className="bg-gray-900/50 rounded-lg p-6">
               <div className="grid md:grid-cols-4 gap-6">
                 <Image
                   src={`https://image.tmdb.org/t/p/w500${ep.stillPath}`}
@@ -119,62 +110,38 @@ export default function SeasonPage({ params }) {
                     {ep.episodeNumber}. {ep.name}
                   </h3>
                   <div className="text-sm text-gray-400">
-                    {ep.runtime || data.episodeRunTime?.[0]} min •{" "}
-                    {ep.airDate?.split("T")[0]}
+                    {ep.runtime || data.episodeRunTime?.[0]} min • {ep.airDate?.split("T")[0]}
                   </div>
                   <p className="text-gray-300 line-clamp-3">{ep.overview}</p>
-
+  
                   {/* Downloads & Subtitles */}
-                  {ep.downloads?.length || ep.subtitles?.length ? (
-                    <>
-                      {/* Downloads */}
+                  {(ep.downloads?.length || ep.subtitles?.length) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                       {ep.downloads?.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center">
-                            <Download className="w-4 h-4 mr-1" /> Downloads
+                        <div className="bg-black/40 p-4 rounded-xl border border-red-600/50">
+                          <h4 className="text-base font-semibold mb-3 text-red-400 flex items-center">
+                            <Download className="w-4 h-4 mr-2" /> Available Downloads
                           </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {ep.downloads.map((dl, idx) => (
-                              <a
-                                key={`dl-${idx}-${dl.quality}-${dl.format}`}
-                                href={dl.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-red-600 hover:bg-red-700 text-xs px-3 py-1 rounded"
-                              >
-                                {dl.quality} {dl.format}
-                              </a>
-                            ))}
-                          </div>
+                          {ep.downloads.map((dl, idx) => (
+                            <a key={idx} href={dl.url} target="_blank" rel="noopener noreferrer" className="block bg-red-900/30 p-2 rounded text-xs hover:bg-red-900/40">
+                              {dl.quality} {dl.format}
+                            </a>
+                          ))}
                         </div>
                       )}
-
-                      {/* Subtitles */}
                       {ep.subtitles?.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center">
-                            <FileText className="w-4 h-4 mr-1" /> Subtitles
+                        <div className="bg-black/40 p-4 rounded-xl border border-blue-600/50">
+                          <h4 className="text-base font-semibold mb-3 text-blue-400 flex items-center">
+                            <FileText className="w-4 h-4 mr-2" /> Available Subtitles
                           </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {ep.subtitles.map((sub, idx) => (
-                              <a
-                                key={`sub-${idx}-${sub.language}`}
-                                href={sub.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1 rounded"
-                              >
-                                {sub.language}
-                              </a>
-                            ))}
-                          </div>
+                          {ep.subtitles.map((sub, idx) => (
+                            <a key={idx} href={sub.url} target="_blank" rel="noopener noreferrer" className="block bg-blue-900/30 p-2 rounded text-xs hover:bg-blue-900/40">
+                              {sub.language}
+                            </a>
+                          ))}
                         </div>
                       )}
-                    </>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic mt-2">
-                      Episodes will be available soon
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>
