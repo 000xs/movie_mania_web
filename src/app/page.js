@@ -1,9 +1,18 @@
-"use client"
-import Link from "next/link"
-import Image from "next/image"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Search, Play, Info, Star, Calendar, Clock, Menu, X } from "lucide-react"
+"use client";
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  Play,
+  Info,
+  Star,
+  Calendar,
+  Clock,
+  Menu,
+  X,
+} from "lucide-react";
 import {
   getTrendingMovies,
   getPopularMovies,
@@ -13,28 +22,28 @@ import {
   getImageUrl,
   getBackdropUrl,
   getTrendingTvSeries,
-} from "../lib/tmdb"
+} from "../lib/tmdb";
 
 export default function Home() {
-  const router = useRouter()
-  const [search, setSearch] = useState("")
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState(null)
-  const [featuredMovie, setFeaturedMovie] = useState(null)
-  const [movieCategories, setMovieCategories] = useState([])
-  const [tvSeriesCategories, setTvSeriesCategories] = useState([])
-  const [genres, setGenres] = useState([])
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [featuredMovie, setFeaturedMovie] = useState(null);
+  const [movieCategories, setMovieCategories] = useState([]);
+  const [tvSeriesCategories, setTvSeriesCategories] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Helper function to get genre names from genre IDs
   const getGenreNames = (genreIds) => {
     return genreIds
       .map((id) => {
-        const genre = genres.find((g) => g.id === id)
-        return genre ? genre.name : ""
+        const genre = genres.find((g) => g.id === id);
+        return genre ? genre.name : "";
       })
-      .filter((name) => name !== "")
-  }
+      .filter((name) => name !== "");
+  };
 
   // Format movie data with genre names - handles both TMDB and local database formats
   const formatMovieWithGenres = (movie) => {
@@ -43,28 +52,32 @@ export default function Home() {
       return {
         id: movie.movieId || movie._id,
         title: movie.title,
-        year: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "N/A",
+        year: movie.releaseDate
+          ? new Date(movie.releaseDate).getFullYear()
+          : "N/A",
         rating: movie.voteAverage ? movie.voteAverage.toFixed(1) : "N/A",
         image: movie.posterPath || "/placeholder.svg",
         backdrop: movie.backdropPath || "/placeholder.svg",
         genre: movie.genres || [],
         description: movie.overview,
         duration: movie.runtime ? `${movie.runtime}m` : "N/A",
-      }
+      };
     }
     // Handle TMDB format
     return {
       id: movie.id,
       title: movie.title,
-      year: movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A",
+      year: movie.release_date
+        ? new Date(movie.release_date).getFullYear()
+        : "N/A",
       rating: movie.vote_average ? movie.vote_average.toFixed(1) : "N/A",
       image: getImageUrl(movie.poster_path),
       backdrop: getBackdropUrl(movie.backdrop_path),
       genre: getGenreNames(movie.genre_ids || []),
       description: movie.overview,
       duration: movie.runtime ? `${movie.runtime}m` : "N/A",
-    }
-  }
+    };
+  };
 
   // Format TV series data with genre names
   const formatTvWithGenres = (tvsers) => {
@@ -73,60 +86,97 @@ export default function Home() {
       return {
         id: tvsers.tvseriesId || tvsers._id,
         title: tvsers.name,
-        year: tvsers.firstAirDate ? new Date(tvsers.firstAirDate).getFullYear() : "N/A",
+        year: tvsers.firstAirDate
+          ? new Date(tvsers.firstAirDate).getFullYear()
+          : "N/A",
         rating: tvsers.voteAverage ? tvsers.voteAverage.toFixed(1) : "N/A",
         image: tvsers.posterPath || "/placeholder.svg",
         backdrop: tvsers.backdropPath || "/placeholder.svg",
         genre: tvsers.genres || [],
         description: tvsers.overview,
         duration: tvsers.runtime ? `${tvsers.runtime}m` : "N/A",
-      }
+      };
     }
     // Handle TMDB format
     return {
       id: tvsers.id,
       title: tvsers.title,
-      year: tvsers.release_date ? new Date(tvsers.release_date).getFullYear() : "N/A",
+      year: tvsers.release_date
+        ? new Date(tvsers.release_date).getFullYear()
+        : "N/A",
       rating: tvsers.vote_average ? tvsers.vote_average.toFixed(1) : "N/A",
       image: getImageUrl(tvsers.poster_path),
       backdrop: getBackdropUrl(tvsers.backdrop_path),
       genre: getGenreNames(tvsers.genre_ids || []),
       description: tvsers.overview,
       duration: tvsers.runtime ? `${tvsers.runtime}m` : "N/A",
-    }
-  }
+    };
+  };
 
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         // Fetch genres first
-        const genresData = await getGenres()
-        setGenres(genresData)
+        const genresData = await getGenres();
+        setGenres(genresData);
         // Fetch different movie and TV series categories
-        const [trendingMovies, popularMovies, topRatedMovies, nowPlayingMovies, trendingTvSeries] = await Promise.all([
+        const [
+          trendingMovies,
+          popularMovies,
+          topRatedMovies,
+          nowPlayingMovies,
+          trendingTvSeries,
+        ] = await Promise.all([
           getTrendingMovies(),
           getPopularMovies(),
           getTopRatedMovies(),
           getNowPlayingMovies(),
           getTrendingTvSeries(),
-        ])
+        ]);
 
         // Set featured movie (first trending movie)
-        if (trendingMovies && trendingMovies.length > 0) {
-          const featured = trendingMovies[0]
+        if (
+          trendingMovies &&
+          trendingMovies.length > 0  
+           
+        ) {
+          if (trendingMovies[0].voteAverage > trendingTvSeries[0].voteAverage) {
+            const featured = trendingMovies[0];
+            setFeaturedMovie({
+              id: featured.id,
+              title: featured.title,
+              year: featured.releaseDate
+                ? new Date(featured.releaseDate).getFullYear()
+                : "N/A",
+              rating: featured.voteAverage
+                ? featured.voteAverage.toFixed(1)
+                : "N/A",
+              duration: "N/A",
+              genre: getGenreNames(featured.genre_ids || []),
+              description: featured.overview,
+              backdrop: featured.backdropPath,
+              logo: null,
+            });
+          }
+          const featured = trendingTvSeries[0];
           setFeaturedMovie({
             id: featured.id,
-            title: featured.title,
-            year: featured.releaseDate ? new Date(featured.releaseDate).getFullYear() : "N/A",
-            rating: featured.voteAverage ? featured.voteAverage.toFixed(1) : "N/A",
+            title: featured.name,
+            year: featured.firstAirDate
+              ? new Date(featured.firstAirDate).getFullYear()
+              : "N/A",
+            rating: featured.voteAverage
+              ? featured.voteAverage.toFixed(1)
+              : "N/A",
             duration: "N/A",
             genre: getGenreNames(featured.genre_ids || []),
             description: featured.overview,
             backdrop: featured.backdropPath,
             logo: null,
-          })
-          console.log("Featured movie set:", featured.title)
+          });
+
+          console.log("Featured movie set:", featured.title);
         }
 
         // Format movie categories
@@ -135,8 +185,8 @@ export default function Home() {
             title: "New Movies",
             movies: trendingMovies.slice(0, 12).map(formatMovieWithGenres),
           },
-        ]
-        setMovieCategories(movieCategories)
+        ];
+        setMovieCategories(movieCategories);
 
         // Format TV series categories
         const tvSeriesCategories = [
@@ -144,24 +194,24 @@ export default function Home() {
             title: "Trending TV Series",
             series: trendingTvSeries.slice(0, 12).map(formatTvWithGenres),
           },
-        ]
-        setTvSeriesCategories(tvSeriesCategories)
+        ];
+        setTvSeriesCategories(tvSeriesCategories);
       } catch (error) {
-        console.error("Error fetching movie data:", error)
+        console.error("Error fetching movie data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchMovieData()
-  }, [])
+    fetchMovieData();
+  }, []);
 
   const handleSearch = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (search.trim()) {
-      router.push(`/search?q=${search}`)
+      router.push(`/search?q=${search}`);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -171,7 +221,7 @@ export default function Home() {
           <p className="text-lg sm:text-xl">Loading movies...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -184,23 +234,40 @@ export default function Home() {
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded flex items-center justify-center font-bold text-sm sm:text-xl">
                 M
               </div>
-              <span className="text-lg sm:text-xl font-bold text-red-600 hidden xs:block">Movie Mania</span>
+              <span className="text-lg sm:text-xl font-bold text-red-600 hidden xs:block">
+                Movie Mania
+              </span>
             </Link>
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex space-x-6">
-              <Link href="/" className="hover:text-gray-300 transition-colors text-sm">
+              <Link
+                href="/"
+                className="hover:text-gray-300 transition-colors text-sm"
+              >
                 Home
               </Link>
-              <Link href="/movies" className="hover:text-gray-300 transition-colors text-sm">
+              <Link
+                href="/movies"
+                className="hover:text-gray-300 transition-colors text-sm"
+              >
                 Movies
               </Link>
-              <Link href="/tv-shows" className="hover:text-gray-300 transition-colors text-sm">
+              <Link
+                href="/tv-shows"
+                className="hover:text-gray-300 transition-colors text-sm"
+              >
                 TV Shows
               </Link>
-              <Link href="/my-list" className="hover:text-gray-300 transition-colors text-sm">
+              <Link
+                href="/my-list"
+                className="hover:text-gray-300 transition-colors text-sm"
+              >
                 My List
               </Link>
-              <Link href="/dashboard" className="hover:text-gray-300 transition-colors text-sm">
+              <Link
+                href="/dashboard"
+                className="hover:text-gray-300 transition-colors text-sm"
+              >
                 Dashboard
               </Link>
             </nav>
@@ -222,7 +289,11 @@ export default function Home() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 hover:bg-gray-800 rounded-md transition-colors"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div>
           </div>
@@ -317,7 +388,10 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
               {featuredMovie.genre.slice(0, 3).map((g) => (
-                <span key={g} className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">
+                <span
+                  key={g}
+                  className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full"
+                >
                   {g}
                 </span>
               ))}
@@ -344,7 +418,9 @@ export default function Home() {
         {/* Movie Categories */}
         {movieCategories.map((category) => (
           <section key={category.title}>
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{category.title}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+              {category.title}
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {category.movies.map((movie) => (
                 <Link key={movie.id} href={`/movie/${movie.id}`}>
@@ -359,7 +435,9 @@ export default function Home() {
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                        <h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2">{movie.title}</h3>
+                        <h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2">
+                          {movie.title}
+                        </h3>
                         <div className="flex items-center justify-between text-xs text-gray-300">
                           <span>{movie.year}</span>
                           <div className="flex items-center space-x-1">
@@ -369,7 +447,10 @@ export default function Home() {
                         </div>
                         <div className="flex flex-wrap gap-1 mt-1 sm:mt-2">
                           {movie.genre.slice(0, 2).map((g) => (
-                            <span key={g} className="text-xs bg-gray-800/80 text-gray-300 px-1 py-0.5 rounded">
+                            <span
+                              key={g}
+                              className="text-xs bg-gray-800/80 text-gray-300 px-1 py-0.5 rounded"
+                            >
                               {g}
                             </span>
                           ))}
@@ -387,7 +468,9 @@ export default function Home() {
         {tvSeriesCategories.map((category) => (
           <section key={category.title}>
             {/* {console.log(category.series)} */}
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{category.title}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+              {category.title}
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {category.series.map((series) => (
                 <Link key={series.id} href={`/tv/${series.id}`}>
@@ -402,7 +485,9 @@ export default function Home() {
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                        <h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2">{series.title}</h3>
+                        <h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2">
+                          {series.title}
+                        </h3>
                         <div className="flex items-center justify-between text-xs text-gray-300">
                           <span>{series.year}</span>
                           <div className="flex items-center space-x-1">
@@ -412,7 +497,10 @@ export default function Home() {
                         </div>
                         <div className="flex flex-wrap gap-1 mt-1 sm:mt-2">
                           {series.genre.slice(0, 2).map((g) => (
-                            <span key={g} className="text-xs bg-gray-800/80 text-gray-300 px-1 py-0.5 rounded">
+                            <span
+                              key={g}
+                              className="text-xs bg-gray-800/80 text-gray-300 px-1 py-0.5 rounded"
+                            >
                               {g}
                             </span>
                           ))}
@@ -432,67 +520,102 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Company</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Company
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/about" className="hover:text-white transition-colors">
+                  <Link
+                    href="/about"
+                    className="hover:text-white transition-colors"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/careers" className="hover:text-white transition-colors">
+                  <Link
+                    href="/careers"
+                    className="hover:text-white transition-colors"
+                  >
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="/press" className="hover:text-white transition-colors">
+                  <Link
+                    href="/press"
+                    className="hover:text-white transition-colors"
+                  >
                     Press
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Support
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/help" className="hover:text-white transition-colors">
+                  <Link
+                    href="/help"
+                    className="hover:text-white transition-colors"
+                  >
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
+                  <Link
+                    href="/contact"
+                    className="hover:text-white transition-colors"
+                  >
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/feedback" className="hover:text-white transition-colors">
+                  <Link
+                    href="/feedback"
+                    className="hover:text-white transition-colors"
+                  >
                     Feedback
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Legal</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Legal
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition-colors">
+                  <Link
+                    href="/privacy"
+                    className="hover:text-white transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
+                  <Link
+                    href="/terms"
+                    className="hover:text-white transition-colors"
+                  >
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cookies" className="hover:text-white transition-colors">
+                  <Link
+                    href="/cookies"
+                    className="hover:text-white transition-colors"
+                  >
                     Cookie Policy
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Connect</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Connect
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
                   <Link href="#" className="hover:text-white transition-colors">
@@ -518,5 +641,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

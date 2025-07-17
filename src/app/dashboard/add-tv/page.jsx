@@ -1,6 +1,8 @@
-"use client"
-import { useState } from "react"
-import { getTVSeriesDetails, getTVSeasonDetails } from "@/lib/tmdb"
+// app/(dashboard)/add-tv/page.jsx
+"use client";
+
+import { useState } from "react";
+import { getTVSeriesDetails, getTVSeasonDetails } from "@/lib/tmdb";
 import {
   Search,
   Plus,
@@ -18,590 +20,871 @@ import {
   AlertCircle,
   Check,
   Save,
-} from "lucide-react"
+  Users,
+  Briefcase,
+} from "lucide-react";
 
 export default function AddTvSeries() {
-  const [tmdbId, setTmdbId] = useState("")
-  const [tmdbUrl, setTmdbUrl] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
-  const [expandedSeasons, setExpandedSeasons] = useState({})
+  /* ---------- state ---------- */
+  const [tmdbId, setTmdbId] = useState("");
+  const [tmdbUrl, setTmdbUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [expandedSeasons, setExpandedSeasons] = useState({});
 
-  // Complex nested TV data with seasons, episodes and downloads
   const [tvData, setTvData] = useState({
-    title: "",
+    tvseriesId: "",
+    name: "",
     overview: "",
     posterPath: "",
     backdropPath: "",
     firstAirDate: "",
+    lastAirDate: "",
     voteAverage: "",
-    runtime: "",
+    voteCount: "",
+    popularity: "",
+    adult: false,
+    originalLanguage: "en",
+    originalName: "",
+    status: "Returning Series",
+    tagline: "",
+    homepage: "",
+    tmdbId: "",
+    numberOfEpisodes: 0,
+    numberOfSeasons: 0,
+    episodeRunTime: [],
+    inProduction: false,
+    type: "",
     genres: [],
     cast: [],
     crew: [],
+    networks: [],
+    productionCompanies: [],
+    productionCountries: [],
+    spokenLanguages: [],
+    downloads: [],
+    subtitles: [],
     seasons: [],
-  })
+  });
 
+  /* ---------- batch state ---------- */
+  const [batchDl, setBatchDl] = useState({
+    quality: "1080p",
+    format: "MP4",
+    url: "",
+    title: "",
+  });
+  const [batchSub, setBatchSub] = useState({
+    language: "English",
+    url: "",
+  });
+
+  /* ---------- helpers ---------- */
   const extractTmdbIdFromUrl = (url) => {
-    const match = url.match(/tv\/(\d+)/)
-    return match ? match[1] : null
-  }
+    const match = url.match(/tv\/(\d+)/);
+    return match ? match[1] : null;
+  };
+  const toggleSeason = (sn) =>
+    setExpandedSeasons((p) => ({ ...p, [sn]: !p[sn] }));
 
-  const toggleSeason = (seasonNumber) => {
-    setExpandedSeasons((prev) => ({
-      ...prev,
-      [seasonNumber]: !prev[seasonNumber],
-    }))
-  }
-
+  /* ---------- fetch ---------- */
   const handleTmdbFetch = async () => {
-    setError("")
-    let idToFetch = tmdbId
-
+    setError("");
+    let idToFetch = tmdbId;
     if (tmdbUrl) {
-      const extractedId = extractTmdbIdFromUrl(tmdbUrl)
-      if (extractedId) {
-        idToFetch = extractedId
-        setTmdbId(extractedId)
+      const ex = extractTmdbIdFromUrl(tmdbUrl);
+      if (ex) {
+        idToFetch = ex;
+        setTmdbId(ex);
       } else {
-        setError("Invalid TMDB URL. Please provide a valid TV series URL.")
-        return
+        setError("Invalid TMDB URL.");
+        return;
       }
     }
-
     if (!idToFetch) {
-      setError("Please enter TMDB ID or URL")
-      return
+      setError("Enter TMDB ID or URL.");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const tvDetails = await getTVSeriesDetails(idToFetch)
-      if (!tvDetails) {
-        setError("TV show not found")
-        setLoading(false)
-        return
-      }
+      const d = await getTVSeriesDetails(idToFetch);
+      if (!d) throw new Error("Show not found");
 
-      // Map basic info
-      const baseData = {
-        title: tvDetails.name || "",
-        overview: tvDetails.overview || "",
-        posterPath: tvDetails.poster_path ? `https://image.tmdb.org/t/p/w500${tvDetails.poster_path}` : "",
-        backdropPath: tvDetails.backdrop_path ? `https://image.tmdb.org/t/p/w1280${tvDetails.backdrop_path}` : "",
-        firstAirDate: tvDetails.first_air_date || "",
-        voteAverage: tvDetails.vote_average ? tvDetails.vote_average.toString() : "",
-        runtime: tvDetails.episode_run_time?.[0]?.toString() || "",
-        genres: tvDetails.genres?.map((g) => g.name) || [],
+      const base = {
+        tvseriesId: String(d.id),
+        name: d.name || "",
+        overview: d.overview || "",
+        posterPath: d.poster_path
+          ? `https://image.tmdb.org/t/p/w500${d.poster_path}`
+          : "",
+        backdropPath: d.backdrop_path
+          ? `https://image.tmdb.org/t/p/w1280${d.backdrop_path}`
+          : "",
+        firstAirDate: d.first_air_date || "",
+        lastAirDate: d.last_air_date || "",
+        voteAverage: String(d.vote_average ?? ""),
+        voteCount: String(d.vote_count ?? ""),
+        popularity: String(d.popularity ?? ""),
+        adult: d.adult ?? false,
+        originalLanguage: d.original_language || "en",
+        originalName: d.original_name || "",
+        status: d.status || "Returning Series",
+        tagline: d.tagline || "",
+        homepage: d.homepage || "",
+        tmdbId: d.id,
+        numberOfEpisodes: d.number_of_episodes || 0,
+        numberOfSeasons: d.number_of_seasons || 0,
+        episodeRunTime: d.episode_run_time || [],
+        inProduction: d.in_production ?? false,
+        type: d.type || "",
+        genres: d.genres?.map((g) => g.name) || [],
+        networks: d.networks?.map((n) => ({
+          id: n.id,
+          name: n.name,
+          logoPath: n.logo_path
+            ? `https://image.tmdb.org/t/p/w200${n.logo_path}`
+            : "",
+          originCountry: n.origin_country,
+        })) || [],
+        productionCompanies: d.production_companies?.map((c) => ({
+          name: c.name,
+          logoPath: c.logo_path
+            ? `https://image.tmdb.org/t/p/w200${c.logo_path}`
+            : "",
+          originCountry: c.origin_country,
+        })) || [],
+        productionCountries: d.production_countries?.map((c) => ({
+          name: c.name,
+          iso31661: c.iso_3166_1,
+        })) || [],
+        spokenLanguages: d.spoken_languages?.map((l) => ({
+          name: l.name,
+          iso6391: l.iso_639_1,
+        })) || [],
         cast: [],
         crew: [],
         seasons: [],
-      }
+      };
 
-      // Fetch credits (cast and crew)
       try {
-        const credits = await fetch(`/api/tv/${idToFetch}/credits`).then((res) => res.json())
-        baseData.cast = credits.cast?.slice(0, 5) || []
-        baseData.crew = credits.crew?.slice(0, 5) || []
-      } catch (creditsError) {
-        console.warn("Could not fetch credits:", creditsError)
+        const cr = await fetch(`/api/tv/${idToFetch}/credits`).then((r) =>
+          r.json()
+        );
+        base.cast = cr.cast?.slice(0, 15).map((c) => ({
+          name: c.name,
+          character: c.character,
+          profilePath: c.profile_path
+            ? `https://image.tmdb.org/t/p/w185${c.profile_path}`
+            : "",
+        }));
+        base.crew = cr.crew?.slice(0, 15).map((c) => ({
+          name: c.name,
+          job: c.job,
+          department: c.department,
+          profilePath: c.profile_path
+            ? `https://image.tmdb.org/t/p/w185${c.profile_path}`
+            : "",
+        }));
+      } catch {
+        /* ignore */
       }
 
-      const seasonsWithEpisodes = await Promise.all(
-        tvDetails.seasons.map(async (season) => {
+      const seasons = await Promise.all(
+        d.seasons.map(async (s) => {
           try {
-            const seasonDetails = await getTVSeasonDetails(idToFetch, season.season_number)
+            const sd = await getTVSeasonDetails(idToFetch, s.season_number);
             return {
-              seasonNumber: season.season_number,
-              name: season.name || "",
-              airDate: season.air_date || "",
-              episodeCount: season.episode_count || 0,
-              overview: season.overview || "",
-              posterPath: season.poster_path ? `https://image.tmdb.org/t/p/w500${season.poster_path}` : "",
-              episodes: seasonDetails.episodes.map((ep) => ({
-                episodeNumber: ep.episode_number,
-                name: ep.name || "",
-                overview: ep.overview || "",
-                airDate: ep.air_date || "",
-                runtime: ep.runtime || 0,
-                stillPath: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : "",
-                downloads: [], // empty downloads array initially
-                subtitles: [], // you can add subtitles if available
+              airDate: s.air_date || "",
+              episodeCount: s.episode_count,
+              name: s.name || "",
+              overview: s.overview || "",
+              posterPath: s.poster_path
+                ? `https://image.tmdb.org/t/p/w500${s.poster_path}`
+                : "",
+              seasonNumber: s.season_number,
+              episodes: sd.episodes.map((e) => ({
+                episodeId: `${d.id}-${s.season_number}-${e.episode_number}`,
+                name: e.name || "",
+                overview: e.overview || "",
+                airDate: e.air_date || "",
+                episodeNumber: e.episode_number,
+                seasonNumber: s.season_number,
+                stillPath: e.still_path
+                  ? `https://image.tmdb.org/t/p/w500${e.still_path}`
+                  : "",
+                voteAverage: e.vote_average || 0,
+                voteCount: e.vote_count || 0,
+                runtime: e.runtime || 0,
+                downloads: [],
+                subtitles: [],
               })),
-            }
-          } catch (seasonError) {
-            console.warn(`Could not fetch season ${season.season_number}:`, seasonError)
+            };
+          } catch {
             return {
-              seasonNumber: season.season_number,
-              name: season.name || "",
-              airDate: season.air_date || "",
-              episodeCount: season.episode_count || 0,
+              airDate: s.air_date || "",
+              episodeCount: s.episode_count,
+              name: s.name || "",
+              overview: s.overview || "",
+              posterPath: s.poster_path
+                ? `https://image.tmdb.org/t/p/w500${s.poster_path}`
+                : "",
+              seasonNumber: s.season_number,
               episodes: [],
-            }
+            };
           }
         })
-      )
+      );
+      base.seasons = seasons;
 
-
-      baseData.seasons = seasonsWithEpisodes
-      setTvData(baseData)
-      setSuccessMessage("TV details fetched successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      setTvData(base);
+      setSuccessMessage("TV details fetched!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      console.error(err)
-      setError("Failed to fetch TV details from TMDB")
+      setError(err.message || "Failed to fetch TV details.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Handlers to update downloads for an episode inside a season
-  const addDownloadToEpisode = (seasonIndex, episodeIndex) => {
-    const newData = { ...tvData }
-    newData.seasons[seasonIndex].episodes[episodeIndex].downloads.push({
+  /* ---------- download & subtitle helpers ---------- */
+  const addDownload = (sIdx, eIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].downloads.push({
       title: "",
       url: "",
-      format: "MP4",
       quality: "1080p",
-    })
-    setTvData(newData)
-  }
+      format: "MP4",
+    });
+    setTvData(copy);
+  };
+  const updateDownload = (sIdx, eIdx, dIdx, field, value) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].downloads[dIdx][field] = value;
+    setTvData(copy);
+  };
+  const removeDownload = (sIdx, eIdx, dIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].downloads.splice(dIdx, 1);
+    setTvData(copy);
+  };
 
-  const updateDownloadField = (seasonIndex, episodeIndex, downloadIndex, field, value) => {
-    const newData = { ...tvData }
-    newData.seasons[seasonIndex].episodes[episodeIndex].downloads[downloadIndex][field] = value
-    setTvData(newData)
-  }
+  const addSubtitleToEpisode = (sIdx, eIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles.push({
+      language: "English",
+      url: "",
+    });
+    setTvData(copy);
+  };
+  const updateSubtitleField = (sIdx, eIdx, subIdx, field, value) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles[subIdx][field] = value;
+    setTvData(copy);
+  };
+  const removeSubtitleFromEpisode = (sIdx, eIdx, subIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes[eIdx].subtitles.splice(subIdx, 1);
+    setTvData(copy);
+  };
 
-  const removeDownloadFromEpisode = (seasonIndex, episodeIndex, downloadIndex) => {
-    const newData = { ...tvData }
-    newData.seasons[seasonIndex].episodes[episodeIndex].downloads.splice(downloadIndex, 1)
-    setTvData(newData)
-  }
+  /* ---------- batch helpers ---------- */
+  const applyBatchDownloads = (sIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes.forEach((ep) => {
+      ep.downloads.push({
+        title: `${batchDl.title} S${String(
+          copy.seasons[sIdx].seasonNumber
+        ).padStart(2, "0")}E${String(ep.episodeNumber).padStart(2, "0")}`,
+        url: `${batchDl.url}${ep.episodeNumber}`,
+        quality: batchDl.quality,
+        format: batchDl.format,
+      });
+    });
+    setTvData(copy);
+  };
 
-  // Submit handler
+  const applyBatchSubtitles = (sIdx) => {
+    const copy = { ...tvData };
+    copy.seasons[sIdx].episodes.forEach((ep) => {
+      ep.subtitles.push({
+        language: batchSub.language,
+        url: `${batchSub.url}${ep.episodeNumber}.vtt`,
+      });
+    });
+    setTvData(copy);
+  };
+
+  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
-
-    // Validation
-    if (!tvData.title.trim()) {
-      setError("TV series title is required")
-      setLoading(false)
-      return
+    e.preventDefault();
+    if (!tvData.name.trim()) {
+      setError("TV series name is required.");
+      return;
     }
 
-    // Add required fields for backend validation if needed
     const payload = {
       ...tvData,
-      name: tvData.title, // if backend expects name instead of title
+      firstAirDate: tvData.firstAirDate ? new Date(tvData.firstAirDate) : null,
+      lastAirDate: tvData.lastAirDate ? new Date(tvData.lastAirDate) : null,
+      voteAverage: Number(tvData.voteAverage) || 0,
+      voteCount: Number(tvData.voteCount) || 0,
+      popularity: Number(tvData.popularity) || 0,
+      tmdbId: Number(tmdbId || extractTmdbIdFromUrl(tmdbUrl)),
       tvseriesId: tmdbId || extractTmdbIdFromUrl(tmdbUrl),
-    }
+      episodeRunTime: tvData.episodeRunTime.length
+        ? tvData.episodeRunTime
+        : tvData.runtime
+          ? [Number(tvData.runtime)]
+          : [],
+      seasons: tvData.seasons.map((s) => ({
+        ...s,
+        airDate: s.airDate ? new Date(s.airDate) : null,
+        episodes: s.episodes.map((e) => ({
+          ...e,
+          airDate: e.airDate ? new Date(e.airDate) : null,
+          downloads: e.downloads || [],
+          subtitles: e.subtitles || [],
+        })),
+      })),
+    };
 
+    setLoading(true);
     try {
       const res = await fetch("/api/tv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
-
+      });
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || "Failed to add TV series")
+        const { error: msg } = await res.json();
+        throw new Error(msg || "Submission failed.");
       }
-
-      setSuccessMessage("TV Series added successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      setSuccessMessage("TV series added!");
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  /* -------------------------  RENDER  ------------------------- */
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="flex justify-center items-center space-x-3 mb-2">
             <Tv className="h-10 w-10 text-red-600" />
-            <h1 className="text-4xl font-bold text-red-600">Add TV Series</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-red-600">
+              Add TV Series
+            </h1>
           </div>
-          <p className="text-gray-400 text-lg">Fetch TV series details from TMDB and manage episodes with downloads</p>
+          <p className="text-gray-400">
+            Fetch from TMDB, manage seasons / episodes, and attach download
+            links.
+          </p>
         </div>
 
         {/* Notifications */}
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
-
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 flex items-center space-x-3">
-            <Check className="h-5 w-5 flex-shrink-0" />
+          <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 flex items-center space-x-2">
+            <Check className="h-5 w-5" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* TMDB Fetch Section */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-red-900/20 to-blue-900/20 rounded-2xl border border-red-600/30">
-          <div className="flex items-center mb-6">
-            <Search className="h-6 w-6 text-red-500 mr-3" />
-            <h2 className="text-2xl font-semibold">Fetch from TMDB</h2>
+        {/* TMDB Fetch */}
+        <div className="mb-6 p-6 bg-gradient-to-r from-red-900/20 to-blue-900/20 rounded-2xl border border-red-600/30">
+          <div className="flex items-center mb-4">
+            <Search className="h-6 w-6 text-red-500 mr-2" />
+            <h2 className="text-xl font-semibold">Fetch from TMDB</h2>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">TMDB ID</label>
-              <input
-                type="text"
-                placeholder="e.g., 1399 (Game of Thrones)"
-                value={tmdbId}
-                onChange={(e) => setTmdbId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">TMDB URL</label>
-              <input
-                type="text"
-                placeholder="https://www.themoviedb.org/tv/1399"
-                value={tmdbUrl}
-                onChange={(e) => setTmdbUrl(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="TMDB ID (e.g. 1399)"
+              value={tmdbId}
+              onChange={(e) => setTmdbId(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-red-500"
+            />
+            <input
+              type="text"
+              placeholder="or TMDB URL (e.g. https://www.themoviedb.org/tv/1399)"
+              value={tmdbUrl}
+              onChange={(e) => setTmdbUrl(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-red-500"
+            />
           </div>
           <button
             type="button"
             onClick={handleTmdbFetch}
             disabled={loading}
-            className="w-full lg:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg flex items-center"
           >
-            {loading ? (
-              <div className="flex items-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Fetching from TMDB...
-              </div>
-            ) : (
-              <>
-                <Search className="h-5 w-5 mr-2" />
-                Fetch from TMDB
-              </>
+            {loading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
             )}
+            Fetch
           </button>
         </div>
 
         {/* Main Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <div className="bg-gray-900/50 rounded-2xl border border-gray-800 p-6">
-            <div className="flex items-center mb-6">
-              <Film className="h-6 w-6 text-red-500 mr-3" />
-              <h2 className="text-2xl font-semibold">Basic Information</h2>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Tv className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={tvData.title}
-                    onChange={(e) => setTvData({ ...tvData, title: e.target.value })}
+          {/* Basic Info */}
+          {tvData.name && (
+            <>
+              <div className="bg-gray-900/50 rounded-2xl p-6">
+                <div className="flex items-center mb-4">
+                  <Film className="h-6 w-6 text-red-500 mr-2" />
+                  <h2 className="text-xl font-semibold">Basic Information</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Title"
+                    icon={<Tv className="w-4 h-4" />}
+                    value={tvData.name}
+                    onChange={(v) => setTvData({ ...tvData, name: v })}
                     required
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="Enter TV series title"
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">First Air Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
+                  <Input
+                    label="Original Title"
+                    icon={<Tv className="w-4 h-4" />}
+                    value={tvData.originalName}
+                    onChange={(v) => setTvData({ ...tvData, originalName: v })}
+                  />
+                  <Input
+                    label="First Air Date"
                     type="date"
+                    icon={<Calendar className="w-4 h-4" />}
                     value={tvData.firstAirDate}
-                    onChange={(e) => setTvData({ ...tvData, firstAirDate: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white"
+                    onChange={(v) => setTvData({ ...tvData, firstAirDate: v })}
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Rating</label>
-                <div className="relative">
-                  <Star className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
+                  <Input
+                    label="Last Air Date"
+                    type="date"
+                    icon={<Calendar className="w-4 h-4" />}
+                    value={tvData.lastAirDate}
+                    onChange={(v) => setTvData({ ...tvData, lastAirDate: v })}
+                  />
+                  <Input
+                    label="Rating"
                     type="number"
                     step="0.1"
-                    min="0"
-                    max="10"
+                    icon={<Star className="w-4 h-4" />}
                     value={tvData.voteAverage}
-                    onChange={(e) => setTvData({ ...tvData, voteAverage: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white"
-                    placeholder="0.0 - 10.0"
+                    onChange={(v) => setTvData({ ...tvData, voteAverage: v })}
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Runtime (minutes)</label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
+                  <Input
+                    label="Runtime (min)"
                     type="number"
-                    value={tvData.runtime}
-                    onChange={(e) => setTvData({ ...tvData, runtime: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white"
-                    placeholder="45"
+                    icon={<Clock className="w-4 h-4" />}
+                    value={
+                      tvData.episodeRunTime?.[0] || tvData.runtime || ""
+                    }
+                    onChange={(v) =>
+                      setTvData({
+                        ...tvData,
+                        episodeRunTime: [Number(v)],
+                        runtime: Number(v),
+                      })
+                    }
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Poster URL</label>
-                <div className="relative">
-                  <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    type="url"
+                  <Input
+                    label="Poster URL"
+                    icon={<ImageIcon className="w-4 h-4" />}
                     value={tvData.posterPath}
-                    onChange={(e) => setTvData({ ...tvData, posterPath: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="https://image.tmdb.org/t/p/w500/..."
+                    onChange={(v) => setTvData({ ...tvData, posterPath: v })}
                   />
-                </div>
-                {tvData.posterPath && (
-                  <div className="mt-3">
-                    <img
-                      src={tvData.posterPath || "/placeholder.svg"}
-                      alt="Poster preview"
-                      className="w-24 h-36 object-cover rounded-lg border border-gray-700"
-                      onError={(e) => {
-                        e.target.style.display = "none"
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Backdrop URL</label>
-                <div className="relative">
-                  <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    type="url"
+                  <Input
+                    label="Backdrop URL"
+                    icon={<ImageIcon className="w-4 h-4" />}
                     value={tvData.backdropPath}
-                    onChange={(e) => setTvData({ ...tvData, backdropPath: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="https://image.tmdb.org/t/p/w1280/..."
+                    onChange={(v) => setTvData({ ...tvData, backdropPath: v })}
                   />
                 </div>
-                {tvData.backdropPath && (
-                  <div className="mt-3">
-                    <img
-                      src={tvData.backdropPath || "/placeholder.svg"}
-                      alt="Backdrop preview"
-                      className="w-full h-20 object-cover rounded-lg border border-gray-700"
-                      onError={(e) => {
-                        e.target.style.display = "none"
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Overview</label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <textarea
-                  rows="4"
-                  value={tvData.overview}
-                  onChange={(e) => setTvData({ ...tvData, overview: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-white placeholder-gray-400 resize-none"
-                  placeholder="Enter detailed description of the TV series"
-                />
-              </div>
-            </div>
-          </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-1">
+                    Overview
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={tvData.overview}
+                    onChange={(e) =>
+                      setTvData({ ...tvData, overview: e.target.value })
+                    }
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg"
+                    placeholder="Short description..."
+                  />
+                </div>
 
-          {/* Seasons and Episodes */}
-          {tvData.seasons.length > 0 && (
-            <div className="bg-gray-900/50 rounded-2xl border border-gray-800 p-6">
-              <div className="flex items-center mb-6">
-                <Tv className="h-6 w-6 text-blue-500 mr-3" />
-                <h2 className="text-2xl font-semibold">Seasons & Episodes</h2>
-                <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
-                  {tvData.seasons.length} Season{tvData.seasons.length !== 1 ? "s" : ""}
-                </span>
-              </div>
+                {/* Genres */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-1">
+                    Genres
+                  </label>
+                  <input
+                    value={tvData.genres.join(", ")}
+                    onChange={(e) =>
+                      setTvData({
+                        ...tvData,
+                        genres: e.target.value
+                          .split(",")
+                          .map((g) => g.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg"
+                    placeholder="Action, Drama, Fantasy"
+                  />
+                </div>
 
-              <div className="space-y-6">
-                {console.log(tvData.seasons)}
-                {tvData.seasons.map((season, sIdx) => (
-                  <div key={season.season_number} className="border border-gray-700 rounded-xl bg-gray-800/30">
-                    <button
-                      type="button"
-                      onClick={() => toggleSeason(season.season_number)}
-                      className="w-full flex items-center justify-between p-4 hover:bg-gray-700/30 transition-colors rounded-t-xl"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center">
-                          <span className="text-blue-400 font-bold">{season.season_number}</span>
-                        </div>
-                        <div className="text-left">
-                          <h3 className="text-lg font-semibold text-white">{season.name}</h3>
-                          <p className="text-sm text-gray-400">
-                            {season.air_date} • {season.episode_count || season.episodes.length} episodes
+                {/* Cast */}
+                {tvData.cast.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="flex items-center mb-2">
+                      <Users className="w-5 h-5 mr-2" /> Cast
+                    </h3>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {tvData.cast.map((c) => (
+                        <div key={c.name} className="w-28 shrink-0 text-center">
+                          <img
+                            src={c.profilePath || "/avatar.svg"}
+                            alt={c.name}
+                            className="w-20 h-20 rounded-full object-cover mx-auto"
+                          />
+                          <p className="text-xs mt-1">{c.name}</p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {c.character}
                           </p>
                         </div>
-                      </div>
-                      {expandedSeasons[season.season_number] ? (
-                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Crew */}
+                {tvData.crew.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="flex items-center mb-2">
+                      <Briefcase className="w-5 h-5 mr-2" /> Crew
+                    </h3>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {tvData.crew.map((c) => (
+                        <div key={c.name} className="w-28 shrink-0 text-center">
+                          <img
+                            src={c.profilePath || "/avatar.svg"}
+                            alt={c.name}
+                            className="w-20 h-20 rounded-full object-cover mx-auto"
+                          />
+                          <p className="text-xs mt-1">{c.name}</p>
+                          <p className="text-xs text-gray-400">{c.job}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Seasons & Episodes */}
+              <div className="bg-gray-900/50 rounded-2xl p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center">
+                  <Tv className="w-6 h-6 mr-2" /> Seasons & Episodes
+                </h2>
+                {tvData.seasons.map((season, sIdx) => (
+                  <div
+                    key={season.seasonNumber}
+                    className="border border-gray-700 rounded-lg mb-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSeason(season.seasonNumber)}
+                      className="w-full flex items-center justify-between p-3"
+                    >
+                      <span>
+                        Season {season.seasonNumber} – {season.name}
+                      </span>
+                      {expandedSeasons[season.seasonNumber] ? (
+                        <ChevronUp className="w-5 h-5" />
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                        <ChevronDown className="w-5 h-5" />
                       )}
                     </button>
 
-                    {expandedSeasons[season.season_number] && (
-                      <div className="p-4 border-t border-gray-700">
+                    {expandedSeasons[season.seasonNumber] && (
+                      <div className="p-3 border-t border-gray-700">
+                        {/* —— Season-level batch downloads —— */}
+                        <div className="mb-4 p-3 bg-gray-800 rounded-lg">
+                          <h5 className="text-sm font-semibold mb-2 flex items-center">
+                            <Download className="w-4 h-4 mr-1" /> Batch Downloads
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm">
+                            <input
+                              className="bg-gray-700 rounded px-2 py-1"
+                              placeholder="Title prefix"
+                              value={batchDl.title}
+                              onChange={(e) => setBatchDl({ ...batchDl, title: e.target.value })}
+                            />
+                            <input
+                              className="bg-gray-700 rounded px-2 py-1"
+                              placeholder="URL prefix"
+                              value={batchDl.url}
+                              onChange={(e) => setBatchDl({ ...batchDl, url: e.target.value })}
+                            />
+                            <select
+                              value={batchDl.quality}
+                              onChange={(e) => setBatchDl({ ...batchDl, quality: e.target.value })}
+                              className="bg-gray-700 rounded px-2 py-1"
+                            >
+                              <option>4K</option>
+                              <option>1080p</option>
+                              <option>720p</option>
+                              <option>480p</option>
+                            </select>
+                            <select
+                              value={batchDl.format}
+                              onChange={(e) => setBatchDl({ ...batchDl, format: e.target.value })}
+                              className="bg-gray-700 rounded px-2 py-1"
+                            >
+                              <option>MP4</option>
+                              <option>MKV</option>
+                              <option>AVI</option>
+                            </select>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => applyBatchDownloads(sIdx)}
+                            className="mt-2 text-xs bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                          >
+                            Apply to all episodes in season
+                          </button>
+                        </div>
+
+                        {/* Batch Subtitles */}
+                        <div className="mb-4 p-3 bg-gray-800 rounded-lg">
+                          <h5 className="text-sm font-semibold mb-2 flex items-center">
+                            <FileText className="w-4 h-4 mr-1" /> Batch Subtitles
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                            <input
+                              className="w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400"
+                              placeholder="Language"
+                              value={batchSub.language}
+                              onChange={(e) =>
+                                setBatchSub({ ...batchSub, language: e.target.value })
+                              }
+                            />
+                            <input
+                              className="w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400"
+                              placeholder="URL prefix"
+                              value={batchSub.url}
+                              onChange={(e) =>
+                                setBatchSub({ ...batchSub, url: e.target.value })
+                              }
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => applyBatchSubtitles(sIdx)}
+                            className="mt-2 text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
+                          >
+                            Apply to all episodes in season
+                          </button>
+                        </div>
+
+                        {/* Episodes */}
                         <div className="space-y-4">
                           {season.episodes.map((ep, eIdx) => (
-                            <div key={ep.episode_number} className="bg-gray-700/30 rounded-lg p-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-white mb-1">
-                                    Episode {ep.episode_number}: {ep.name}
+                            <div
+                              key={ep.episodeNumber}
+                              className="bg-gray-800/50 p-3 rounded-lg"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    Ep {ep.episodeNumber}: {ep.name}
                                   </h4>
-                                  {ep.overview && (
-                                    <p className="text-sm text-gray-400 mb-2 line-clamp-2">{ep.overview}</p>
-                                  )}
-                                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                    {ep.air_date && (
-                                      <span className="flex items-center">
-                                        <Calendar className="w-3 h-3 mr-1" />
-                                        {ep.air_date}
-                                      </span>
-                                    )}
-                                    {ep.runtime && (
-                                      <span className="flex items-center">
-                                        <Clock className="w-3 h-3 mr-1" />
-                                        {ep.runtime}min
-                                      </span>
-                                    )}
-                                  </div>
+                                  <p className="text-sm text-gray-400">
+                                    {ep.airDate} • {ep.runtime} min
+                                  </p>
                                 </div>
-                                {ep.still_path && (
+                                {ep.stillPath && (
                                   <img
-                                    src={`https://image.tmdb.org/t/p/w300${ep.still_path}`}
+                                    src={ep.stillPath}
                                     alt={ep.name}
-                                    className="w-20 h-12 object-cover rounded border border-gray-600 ml-4"
-                                    onError={(e) => {
-                                      e.target.style.display = "none"
-                                    }}
+                                    className="w-28 h-16 object-cover rounded"
                                   />
                                 )}
                               </div>
 
-                              {/* Downloads Section */}
-                              <div className="mt-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h5 className="text-sm font-semibold text-gray-300 flex items-center">
-                                    <Download className="w-4 h-4 mr-2 text-green-400" />
+                              {/* Downloads */}
+                              <div className="mt-3">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h5 className="text-sm font-medium flex items-center">
+                                    <Download className="w-4 h-4 mr-1" />{" "}
                                     Downloads ({ep.downloads.length})
                                   </h5>
                                   <button
                                     type="button"
-                                    onClick={() => addDownloadToEpisode(sIdx, eIdx)}
-                                    className="px-3 py-1 bg-green-600/20 border border-green-500/30 rounded-lg text-green-300 hover:bg-green-600/30 transition-all text-sm flex items-center"
+                                    onClick={() => addDownload(sIdx, eIdx)}
+                                    className="text-green-400 text-sm flex items-center"
                                   >
-                                    <Plus className="w-3 h-3 mr-1" />
-                                    Add Download
+                                    <Plus className="w-3 h-3 mr-1" /> Add
                                   </button>
                                 </div>
-
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                   {ep.downloads.map((dl, dIdx) => (
                                     <div
                                       key={dIdx}
-                                      className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-gray-600/20 rounded-lg border border-gray-600/30"
+                                      className="grid grid-cols-12 gap-2 items-center text-sm"
                                     >
-                                      <div className="md:col-span-4">
-                                        <input
-                                          type="text"
-                                          placeholder="Download title"
-                                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 text-sm"
-                                          value={dl.title}
-                                          onChange={(e) =>
-                                            updateDownloadField(sIdx, eIdx, dIdx, "title", e.target.value)
-                                          }
-                                        />
-                                      </div>
-                                      <div className="md:col-span-4">
-                                        <input
-                                          type="url"
-                                          placeholder="Download URL"
-                                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 text-sm"
-                                          value={dl.url}
-                                          onChange={(e) => updateDownloadField(sIdx, eIdx, dIdx, "url", e.target.value)}
-                                        />
-                                      </div>
-                                      <div className="md:col-span-2">
-                                        <select
-                                          value={dl.quality}
-                                          onChange={(e) =>
-                                            updateDownloadField(sIdx, eIdx, dIdx, "quality", e.target.value)
-                                          }
-                                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white text-sm"
-                                        >
-                                          <option value="4K">4K</option>
-                                          <option value="1080p">1080p</option>
-                                          <option value="720p">720p</option>
-                                          <option value="480p">480p</option>
-                                        </select>
-                                      </div>
-                                      <div className="md:col-span-1">
-                                        <select
-                                          value={dl.format}
-                                          onChange={(e) =>
-                                            updateDownloadField(sIdx, eIdx, dIdx, "format", e.target.value)
-                                          }
-                                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white text-sm"
-                                        >
-                                          <option value="MP4">MP4</option>
-                                          <option value="MKV">MKV</option>
-                                          <option value="AVI">AVI</option>
-                                        </select>
-                                      </div>
-                                      <div className="md:col-span-1 flex justify-center">
-                                        <button
-                                          type="button"
-                                          onClick={() => removeDownloadFromEpisode(sIdx, eIdx, dIdx)}
-                                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                                          title="Remove download"
-                                        >
-                                          <X className="w-4 h-4" />
-                                        </button>
-                                      </div>
+                                      <input
+                                        className="col-span-4 bg-gray-700 rounded px-2 py-1"
+                                        placeholder="Title"
+                                        value={dl.title}
+                                        onChange={(e) =>
+                                          updateDownload(
+                                            sIdx,
+                                            eIdx,
+                                            dIdx,
+                                            "title",
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                      <input
+                                        className="col-span-4 bg-gray-700 rounded px-2 py-1"
+                                        placeholder="URL"
+                                        value={dl.url}
+                                        onChange={(e) =>
+                                          updateDownload(
+                                            sIdx,
+                                            eIdx,
+                                            dIdx,
+                                            "url",
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                      <select
+                                        className="col-span-2 bg-gray-700 rounded px-2 py-1"
+                                        value={dl.quality}
+                                        onChange={(e) =>
+                                          updateDownload(
+                                            sIdx,
+                                            eIdx,
+                                            dIdx,
+                                            "quality",
+                                            e.target.value
+                                          )
+                                        }
+                                      >
+                                        <option>4K</option>
+                                        <option>1080p</option>
+                                        <option>720p</option>
+                                        <option>480p</option>
+                                      </select>
+                                      <select
+                                        className="col-span-1 bg-gray-700 rounded px-2 py-1"
+                                        value={dl.format}
+                                        onChange={(e) =>
+                                          updateDownload(
+                                            sIdx,
+                                            eIdx,
+                                            dIdx,
+                                            "format",
+                                            e.target.value
+                                          )
+                                        }
+                                      >
+                                        <option>MP4</option>
+                                        <option>MKV</option>
+                                        <option>AVI</option>
+                                      </select>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          removeDownload(sIdx, eIdx, dIdx)
+                                        }
+                                        className="col-span-1 flex justify-center text-red-400"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
                                     </div>
                                   ))}
-
-                                  {ep.downloads.length === 0 && (
-                                    <div className="text-center py-4 text-gray-500 text-sm">
-                                      No downloads added yet. Click "Add Download" to get started.
-                                    </div>
-                                  )}
                                 </div>
+                              </div>
+
+                              {/* Subtitles */}
+                              <div className="mt-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <h6 className="text-xs font-semibold">
+                                    Subtitles ({ep.subtitles.length})
+                                  </h6>
+                                  <button
+                                    type="button"
+                                    onClick={() => addSubtitleToEpisode(sIdx, eIdx)}
+                                    className="text-xs text-blue-400 flex items-center"
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" /> Add
+                                  </button>
+                                </div>
+                                {ep.subtitles.map((sub, subIdx) => (
+                                  <div
+                                    key={subIdx}
+                                    className="grid grid-cols-12 gap-2 text-xs"
+                                  >
+                                    <input
+                                      className="col-span-5 bg-gray-700 rounded px-2 py-1"
+                                      placeholder="Language"
+                                      value={sub.language}
+                                      onChange={(e) =>
+                                        updateSubtitleField(
+                                          sIdx,
+                                          eIdx,
+                                          subIdx,
+                                          "language",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                    <input
+                                      className="col-span-6 bg-gray-700 rounded px-2 py-1"
+                                      placeholder="Subtitle URL"
+                                      value={sub.url}
+                                      onChange={(e) =>
+                                        updateSubtitleField(
+                                          sIdx,
+                                          eIdx,
+                                          subIdx,
+                                          "url",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeSubtitleFromEpisode(
+                                          sIdx,
+                                          eIdx,
+                                          subIdx
+                                        )
+                                      }
+                                      className="col-span-1 flex justify-center text-red-400"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           ))}
@@ -611,31 +894,54 @@ export default function AddTvSeries() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* Submit Button */}
-          <div className="flex justify-center pt-8">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center min-w-[200px]"
-            >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Saving TV Series...
-                </div>
-              ) : (
-                <>
-                  <Save className="h-5 w-5 mr-2" />
-                  Add TV Series
-                </>
-              )}
-            </button>
-          </div>
+              {/* Submit */}
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-xl flex items-center"
+                >
+                  {loading && (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  )}
+                  <Save className="w-5 h-5 mr-2" /> Save TV Series
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>
-  )
+  );
 }
+
+/* -------------------------  Reusable Input  ------------------------- */
+function Input({ label, icon, value, onChange, ...rest }) {
+  const handleChange = (e) => {
+    const v = e.target.value;
+    onChange?.(rest.type === "number" ? Number(v) : v);
+  };
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          {icon}
+        </span>
+        <input
+          {...rest}
+          value={Array.isArray(value) ? value.join(", ") : value ?? ""}
+          onChange={handleChange}
+          className="w-full pl-10 pr-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500"
+        />
+      </div>
+    </div>
+  );
+}
+const InputSm = ({ className, ...rest }) => (
+  <input
+    {...rest}
+    className={`w-full bg-gray-700 rounded px-2 py-1 text-white placeholder-gray-400 ${className}`}
+  />
+);

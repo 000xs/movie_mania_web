@@ -46,7 +46,7 @@ const TVSeriesCard = ({ series }) => {
           onClick={(e) => {
             e.preventDefault();
             if (confirm("Are you sure you want to delete this TV series?")) {
-              fetch(`/api/tv/${series.id}`, { method: "DELETE" })
+              fetch(`/api/tv/${series.tvseriesId}`, { method: "DELETE" })
                 .then(res => {
                   if (res.ok) {
                     window.location.reload(); // Reload to reflect changes

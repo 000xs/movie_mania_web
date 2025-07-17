@@ -141,8 +141,9 @@ export async function DELETE(request, { params }) {
   const resolvedParams = await params;
   try {
     await connectDB();
-    const tvSeries = await TVSeries.findByIdAndDelete(id);
+    const tvSeries = await TVSeries.findOneAndDelete({ tvseriesId: resolvedParams.id });
     
+
     if (!tvSeries) {
       return NextResponse.json({ error: 'TV Series not found' }, { status: 404 });
     }
