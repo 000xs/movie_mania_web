@@ -2,6 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from 'next-auth';
+import GoogleAnalytics from "@/components/GoogleAnalytics";
  
 
 
@@ -75,6 +76,8 @@ export default async function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+          <GoogleAnalytics />
+          
          
           {children}
     
