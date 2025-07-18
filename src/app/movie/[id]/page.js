@@ -3,6 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Head from 'next/head';
 import { ArrowLeft, Play, Plus, Share, Star, Calendar, Clock, Globe } from "lucide-react"
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb"
 
@@ -10,9 +11,35 @@ export default function MoviePage({ params }) {
   const [movie, setMovie] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
   const mId = params.id
+
+  // Set SEO metadata
+  useEffect(() => {
+    if (movie) {
+      document.title = `${movie.title} (${movie.year}) | Movie Mania`;
+      
+      // Update meta description
+      const description = movie.overview.substring(0, 160);
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.name = 'description';
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.content = description;
+
+      // Update Open Graph tags
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.content = `${movie.title} (${movie.year})`;
+      
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      if (ogDescription) ogDescription.content = description;
+      
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = movie.posterPath;
+    }
+  }, [movie]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -36,9 +63,16 @@ export default function MoviePage({ params }) {
     fetchMovieData()
   }, [mId])
 
+  // SEO: Add canonical URL
+  const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <Head>
+          <title>Loading... | Movie Mania</title>
+          <meta name="description" content="Loading movie details" />
+        </Head>
         <div className="text-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg sm:text-xl">Loading movie details...</p>
@@ -50,6 +84,10 @@ export default function MoviePage({ params }) {
   if (error) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <Head>
+          <title>Error | Movie Mania</title>
+          <meta name="description" content="Error loading movie" />
+        </Head>
         <div className="text-center max-w-md">
           <h1 className="text-2xl sm:text-4xl font-bold mb-4">Error</h1>
           <p className="text-gray-400 mb-8 text-sm sm:text-base">{error}</p>
@@ -68,6 +106,10 @@ export default function MoviePage({ params }) {
   if (!movie) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <Head>
+          <title>Movie Not Found | Movie Mania</title>
+          <meta name="description" content="The movie you're looking for doesn't exist" />
+        </Head>
         <div className="text-center max-w-md">
           <h1 className="text-2xl sm:text-4xl font-bold mb-4">Movie Not Found</h1>
           <p className="text-gray-400 mb-8 text-sm sm:text-base">The movie you&apos;re looking for doesn&apos;t exist.</p>
@@ -85,6 +127,26 @@ export default function MoviePage({ params }) {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <Head>
+        <title>{movie.title} ({movie.year}) | Movie Mania</title>
+        <meta name="description" content={movie.overview.substring(0, 160)} />
+        <link rel="canonical" href={canonicalUrl} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={`${movie.title} (${movie.year})`} />
+        <meta property="og:description" content={movie.overview.substring(0, 160)} />
+        <meta property="og:image" content={movie.posterPath} />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={canonicalUrl} />
+        <meta property="twitter:title" content={`${movie.title} (${movie.year})`} />
+        <meta property="twitter:description" content={movie.overview.substring(0, 160)} />
+        <meta property="twitter:image" content={movie.posterPath} />
+      </Head>
+
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -127,10 +189,11 @@ export default function MoviePage({ params }) {
               <div className="relative aspect-[3/4] max-w-xs sm:max-w-sm mx-auto lg:mx-0">
                 <Image
                   src={movie.posterPath || "/placeholder.svg"}
-                  alt={movie.title}
+                  alt={`${movie.title} movie poster`}
                   fill
                   className="object-cover rounded-lg shadow-2xl"
                   sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
+                  priority
                 />
               </div>
             </div>
@@ -411,7 +474,6 @@ export default function MoviePage({ params }) {
 }
 
 function formatMovie(movieData) {
-  console.log(movieData)
   return {
     id: movieData.movieId,
     title: movieData.title,
@@ -425,15 +487,8 @@ function formatMovie(movieData) {
     genres: movieData.genres,
     posterPath: movieData.posterPath || "/poster.svg",
     backdropPath: movieData.backdropPath || "/backdrop.svg",
-    budget: movieData.budget,
-    revenue: movieData.revenue,
     status: movieData.status,
     originalLanguage: movieData.originalLanguage,
-    originalTitle: movieData.originalTitle,
-    popularity: movieData.popularity,
-    productionCompanies: movieData.productionCompanies || [],
-    productionCountries: movieData.productionCountries || [],
-    spokenLanguages: movieData.spokenLanguages || [],
     homepage: movieData.homepage,
     cast: movieData.cast.map((actor) => ({
       id: actor.creditId,
@@ -441,13 +496,6 @@ function formatMovie(movieData) {
       character: actor.character,
       profilePath:
         (typeof actor.profilePath === "string" ? actor.profilePath : actor.profilePath?.path) || "/profile.svg",
-    })),
-    crew: movieData.crew.map((person) => ({
-      id: person.creditId,
-      name: person.originalName,
-      job: person.job,
-      profilePath:
-        (typeof person.profilePath === "string" ? person.profilePath : person.profilePath?.path) || "/profile.svg",
     })),
     downloads: movieData.downloads.map((file) => ({
       type: file.downloadType,
