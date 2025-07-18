@@ -14,6 +14,7 @@ import {
   Clock,
   Globe,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 
@@ -54,6 +55,94 @@ export default function TvSeriesPage({ params }) {
       fetchSeriesData();
     }
   }, [seriesId]);
+  // ── ADD THIS USE-EFFECT AFTER THE FETCH ONE ──
+  useEffect(() => {
+    if (!series) return;
+
+    const year = series.firstAirDate
+      ? new Date(series.firstAirDate).getFullYear()
+      : "";
+    const desc = (series.description || "").substring(0, 160).trim();
+
+    // 1. page title
+    document.title = `${series.name} (${year}) – Sinhala Subtitles & Download | Movie Mania`;
+
+    // 2. meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.name = "description";
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.content = desc;
+
+    // 3. Open-Graph
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.content = `${series.name} – Sinhala Subtitles`;
+
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.content = desc;
+
+    const ogImg = document.querySelector('meta[property="og:image"]');
+    if (ogImg)
+      ogImg.content = `https://image.tmdb.org/t/p/w1280${series.backdrop}`;
+
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.content = `https://www.moviemanialk.com/tv/${series.id}`;
+
+    // 4. Twitter
+    const twTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twTitle) twTitle.content = `${series.name} – Sinhala Subtitles`;
+
+    const twDesc = document.querySelector('meta[name="twitter:description"]');
+    if (twDesc) twDesc.content = desc;
+
+    const twImg = document.querySelector('meta[name="twitter:image"]');
+    if (twImg)
+      twImg.content = `https://image.tmdb.org/t/p/w1280${series.backdrop}`;
+
+    // 5. canonical
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `https://www.moviemanialk.com/tv/${series.id}`;
+
+    // 6. JSON-LD
+    const prev = document.querySelector('script[type="application/ld+json"]');
+    if (prev) prev.remove();
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.innerHTML = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TVSeries",
+      name: series.name,
+      description: series.description,
+      image: `https://image.tmdb.org/t/p/w1280${series.backdrop}`,
+      datePublished: series.firstAirDate,
+      lastDate: series.lastAirDate,
+      numberOfSeasons: series.numberOfSeasons,
+      numberOfEpisodes: series.numberOfEpisodes,
+      genre: series.genres,
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: Number(series.rating),
+        reviewCount: series.voteCount,
+      },
+      actor: series.cast.map((c) => ({
+        "@type": "Person",
+        name: c.name,
+      })),
+      url: `https://www.moviemanialk.com/tv/${series.id}`,
+      potentialAction: {
+        "@type": "WatchAction",
+        target: `https://www.moviemanialk.com/tv/${series.id}`,
+      },
+    });
+    document.head.appendChild(script);
+  }, [series]);
 
   if (loading) {
     return (
@@ -108,7 +197,7 @@ export default function TvSeriesPage({ params }) {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      {console.log(series)}
+
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center space-x-4 sm:space-x-8">
@@ -184,7 +273,11 @@ export default function TvSeriesPage({ params }) {
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4 text-gray-400" />
-                  <span>{series.firstAirDate ? new Date(series.firstAirDate).getFullYear() : "N/A"}</span>
+                  <span>
+                    {series.firstAirDate
+                      ? new Date(series.firstAirDate).getFullYear()
+                      : "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Clock className="w-4 h-4 text-gray-400" />
@@ -219,10 +312,10 @@ export default function TvSeriesPage({ params }) {
                   <Play className="w-5 h-5 mr-2" />
                   Play Trailer
                 </button>
-                <button className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add to List
-                </button>
+                <Link href={`#seasons`} className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
+                  <Download className="w-5 h-5 mr-2" />
+                  Download
+                </Link>
                 {series.homepage && (
                   <a
                     href={series.homepage}
@@ -241,7 +334,7 @@ export default function TvSeriesPage({ params }) {
       </section>
 
       {/* Seasons Section */}
-      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto" id="seasons">
         <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Seasons</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {series.seasons.map((season) => (

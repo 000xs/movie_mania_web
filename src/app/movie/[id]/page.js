@@ -320,10 +320,10 @@ export default function MoviePage({ params }) {
                   <Play className="w-5 h-5 mr-2" />
                   Play Trailer
                 </button>
-                <button className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
+                <Link href={`#downloads`} className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
                   <Download className="w-5 h-5 mr-2" />
                   Download
-                </button>
+                </Link>
                 {movie.homepage && (
                   <a
                     href={movie.homepage}
@@ -376,7 +376,7 @@ export default function MoviePage({ params }) {
 
       {/* Downloads & Subtitles Section */}
       {(movie.downloads.length > 0 || movie.subtitles.length > 0) && (
-        <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto">
+        <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto" id="downloads">
           <div className="bg-gradient-to-r from-red-900/20 to-blue-900/20 rounded-2xl border border-red-600/30 p-4 sm:p-6 lg:p-8">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-red-400 to-blue-400 bg-clip-text text-transparent">
               🎬 Downloads & Subtitles
@@ -626,7 +626,7 @@ function formatMovie(movieData) {
     homepage: movieData.homepage,
     cast: movieData.cast.map((actor) => ({
       id: actor.creditId,
-      name: actor.originalName,
+      name: actor.name,
       character: actor.character,
       profilePath:
         (typeof actor.profilePath === "string"
