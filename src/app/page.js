@@ -136,35 +136,13 @@ export default function Home() {
         ]);
 
         // Set featured movie (first trending movie)
-        if (
-          trendingMovies &&
-          trendingMovies.length > 0  
-           
-        ) {
-          if (trendingMovies[0].voteAverage > trendingTvSeries[0].voteAverage) {
-            const featured = trendingMovies[0];
-            setFeaturedMovie({
-              id: featured.id,
-              title: featured.title,
-              year: featured.releaseDate
-                ? new Date(featured.releaseDate).getFullYear()
-                : "N/A",
-              rating: featured.voteAverage
-                ? featured.voteAverage.toFixed(1)
-                : "N/A",
-              duration: "N/A",
-              genre: getGenreNames(featured.genre_ids || []),
-              description: featured.overview,
-              backdrop: featured.backdropPath,
-              logo: null,
-            });
-          }
-          const featured = trendingTvSeries[0];
+        if (trendingMovies && trendingMovies.length > 0) {
+          const featured = trendingMovies[0];
           setFeaturedMovie({
             id: featured.id,
-            title: featured.name,
-            year: featured.firstAirDate
-              ? new Date(featured.firstAirDate).getFullYear()
+            title: featured.title,
+            year: featured.releaseDate
+              ? new Date(featured.releaseDate).getFullYear()
               : "N/A",
             rating: featured.voteAverage
               ? featured.voteAverage.toFixed(1)
@@ -175,6 +153,23 @@ export default function Home() {
             backdrop: featured.backdropPath,
             logo: null,
           });
+
+          // const featured = trendingTvSeries[0];
+          // setFeaturedMovie({
+          //   id: featured.id,
+          //   title: featured.name,
+          //   year: featured.firstAirDate
+          //     ? new Date(featured.firstAirDate).getFullYear()
+          //     : "N/A",
+          //   rating: featured.voteAverage
+          //     ? featured.voteAverage.toFixed(1)
+          //     : "N/A",
+          //   duration: "N/A",
+          //   genre: getGenreNames(featured.genre_ids || []),
+          //   description: featured.overview,
+          //   backdrop: featured.backdropPath,
+          //   logo: null,
+          // });
 
           console.log("Featured movie set:", featured.title);
         }
