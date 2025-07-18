@@ -45,7 +45,7 @@ export const metadata = {
     description: 'Download Sinhala subtitles for the latest movies and TV series. Your ultimate source for Sinhala translated subtitles in Sri Lanka.',
     images: [
       {
-        url: 'https://www.moviemanialk.com/og-image.jpg',
+        url: 'https://www.moviemanialk.com/baner.png',
         width: 1200,
         height: 630,
         alt: 'Movie Mania LK - Sinhala Subtitles',
@@ -57,7 +57,7 @@ export const metadata = {
     title: 'Movie Mania LK - Download Sinhala Subtitles for Movies & TV Series',
     description: 'Download Sinhala subtitles for the latest movies and TV series. Your ultimate source for Sinhala translated subtitles in Sri Lanka.',
     creator: '@moviemanialk',
-    images: ['https://www.moviemanialk.com/twitter-image.jpg'],
+    images: ['https://www.moviemanialk.com/baner.png'],
   },
   verification: {
     google: 'your-google-verification-code',
