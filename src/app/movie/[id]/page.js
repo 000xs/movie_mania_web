@@ -1,30 +1,40 @@
-"use client"
-import Link from "next/link"
-import Image from "next/image"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Head from 'next/head';
-import { ArrowLeft, Play, Plus, Share, Star, Calendar, Clock, Globe } from "lucide-react"
-import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb"
+"use client";
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Head from "next/head";
+import {
+  ArrowLeft,
+  Play,
+  Plus,
+  Share,
+  Star,
+  Calendar,
+  Clock,
+  Globe,
+  Download,
+} from "lucide-react";
+import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 
 export default function MoviePage({ params }) {
-  const [movie, setMovie] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const router = useRouter()
-  const mId = params.id
+  const [movie, setMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const router = useRouter();
+  const mId = params.id;
 
   // Set SEO metadata
   useEffect(() => {
     if (movie) {
-      document.title = `${movie.title} (${movie.year}) | Movie Mania`;
-      
+      document.title = `${movie.title} (${movie.year} Download ) | Movie Mania`;
+
       // Update meta description
       const description = movie.overview.substring(0, 160);
       let metaDescription = document.querySelector('meta[name="description"]');
       if (!metaDescription) {
-        metaDescription = document.createElement('meta');
-        metaDescription.name = 'description';
+        metaDescription = document.createElement("meta");
+        metaDescription.name = "description";
         document.head.appendChild(metaDescription);
       }
       metaDescription.content = description;
@@ -32,36 +42,69 @@ export default function MoviePage({ params }) {
       // Update Open Graph tags
       const ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.content = `${movie.title} (${movie.year})`;
-      
-      const ogDescription = document.querySelector('meta[property="og:description"]');
+
+      const ogDescription = document.querySelector(
+        'meta[property="og:description"]'
+      );
       if (ogDescription) ogDescription.content = description;
-      
+
       const ogImage = document.querySelector('meta[property="og:image"]');
       if (ogImage) ogImage.content = movie.posterPath;
+
+      /* ---------- Canonical & structured data ---------- */
+      const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
+
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Movie",
+        name: movie.title,
+        description: movie.overview,
+        image: movie.posterPath,
+        datePublished: movie.releaseDate,
+        genre: movie.genres,
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: movie.rating,
+          reviewCount: movie.voteCount,
+        },
+        duration: movie.runtime,
+        director: movie.director,
+        actor: movie.cast,
+        trailer: {
+          "@type": "VideoObject",
+          url: canonicalUrl,
+        },
+      };
+
+      // Add JSON-LD to page
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.innerHTML = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
     }
   }, [movie]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`/api/movies/${mId}`)
-        const responseData = await response.json()
+        const response = await fetch(`/api/movies/${mId}`);
+        const responseData = await response.json();
         if (!responseData.results || responseData.results.length === 0) {
-          throw new Error("Movie not found")
+          throw new Error("Movie not found");
         }
-        const movieData = responseData.results[0]
-        setMovie(formatMovie(movieData))
+        const movieData = responseData.results[0];
+        setMovie(formatMovie(movieData));
       } catch (err) {
-        setError(err.message || "Failed to load movie")
+        setError(err.message || "Failed to load movie");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchMovieData()
-  }, [mId])
+    fetchMovieData();
+  }, [mId]);
 
   // SEO: Add canonical URL
   const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
@@ -78,7 +121,7 @@ export default function MoviePage({ params }) {
           <p className="text-lg sm:text-xl">Loading movie details...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -100,7 +143,7 @@ export default function MoviePage({ params }) {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   if (!movie) {
@@ -108,11 +151,18 @@ export default function MoviePage({ params }) {
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
         <Head>
           <title>Movie Not Found | Movie Mania</title>
-          <meta name="description" content="The movie you're looking for doesn't exist" />
+          <meta
+            name="description"
+            content="The movie you're looking for doesn't exist"
+          />
         </Head>
         <div className="text-center max-w-md">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-4">Movie Not Found</h1>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base">The movie you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">
+            Movie Not Found
+          </h1>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">
+            The movie you&apos;re looking for doesn&apos;t exist.
+          </p>
           <Link
             href="/"
             className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 sm:py-3 rounded-md transition-colors inline-flex items-center text-sm sm:text-base"
@@ -122,28 +172,39 @@ export default function MoviePage({ params }) {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
       <Head>
-        <title>{movie.title} ({movie.year}) | Movie Mania</title>
+        <title>
+          {movie.title} ({movie.year}) | Movie Mania
+        </title>
         <meta name="description" content={movie.overview.substring(0, 160)} />
         <link rel="canonical" href={canonicalUrl} />
-        
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:title" content={`${movie.title} (${movie.year})`} />
-        <meta property="og:description" content={movie.overview.substring(0, 160)} />
+        <meta
+          property="og:description"
+          content={movie.overview.substring(0, 160)}
+        />
         <meta property="og:image" content={movie.posterPath} />
-        
+
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={canonicalUrl} />
-        <meta property="twitter:title" content={`${movie.title} (${movie.year})`} />
-        <meta property="twitter:description" content={movie.overview.substring(0, 160)} />
+        <meta
+          property="twitter:title"
+          content={`${movie.title} (${movie.year})`}
+        />
+        <meta
+          property="twitter:description"
+          content={movie.overview.substring(0, 160)}
+        />
         <meta property="twitter:image" content={movie.posterPath} />
       </Head>
 
@@ -155,7 +216,9 @@ export default function MoviePage({ params }) {
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded flex items-center justify-center font-bold text-sm sm:text-xl">
                 M
               </div>
-              <span className="text-lg sm:text-xl font-bold text-red-600 hidden xs:block">Movie Mania</span>
+              <span className="text-lg sm:text-xl font-bold text-red-600 hidden xs:block">
+                Movie Mania
+              </span>
             </Link>
             <button
               onClick={() => router.back()}
@@ -178,7 +241,9 @@ export default function MoviePage({ params }) {
       <section className="relative min-h-screen flex items-center pt-16 sm:pt-20">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${getBackdropUrl(movie.backdropPath)})` }}
+          style={{
+            backgroundImage: `url(${getBackdropUrl(movie.backdropPath)})`,
+          }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/40 sm:to-transparent"></div>
         </div>
@@ -203,14 +268,20 @@ export default function MoviePage({ params }) {
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 leading-tight">
                   {movie.title}
                 </h1>
-                {movie.tagline && <p className="text-lg sm:text-xl text-gray-300 italic mb-4">{movie.tagline}</p>}
+                {movie.tagline && (
+                  <p className="text-lg sm:text-xl text-gray-300 italic mb-4">
+                    {movie.tagline}
+                  </p>
+                )}
               </div>
               {/* Movie Meta */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
                 <div className="flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
                   <span className="font-semibold">{movie.rating}</span>
-                  <span className="text-gray-400">({movie.voteCount} votes)</span>
+                  <span className="text-gray-400">
+                    ({movie.voteCount} votes)
+                  </span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4 text-gray-400" />
@@ -222,7 +293,9 @@ export default function MoviePage({ params }) {
                     <span>{movie.runtime}</span>
                   </div>
                 )}
-                <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">{movie.status}</span>
+                <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">
+                  {movie.status}
+                </span>
               </div>
               {/* Genres */}
               <div className="flex flex-wrap gap-2">
@@ -236,7 +309,9 @@ export default function MoviePage({ params }) {
                 ))}
               </div>
               {/* Description */}
-              <p className="text-base sm:text-lg leading-relaxed max-w-3xl text-gray-200">{movie.overview}</p>
+              <p className="text-base sm:text-lg leading-relaxed max-w-3xl text-gray-200">
+                {movie.overview}
+              </p>
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
@@ -244,8 +319,8 @@ export default function MoviePage({ params }) {
                   Play Trailer
                 </button>
                 <button className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add to List
+                  <Download className="w-5 h-5 mr-2" />
+                  Download
                 </button>
                 {movie.homepage && (
                   <a
@@ -267,10 +342,12 @@ export default function MoviePage({ params }) {
       {/* Top Cast Section */}
       {movie.cast.length > 0 && (
         <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Top Cast</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
+            Top Cast
+          </h2>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
             {movie.cast.slice(0, 6).map((actor, index) => {
-              const profileImageUrl = getImageUrl(actor.profilePath, "w185")
+              const profileImageUrl = getImageUrl(actor.profilePath, "w185");
               return (
                 <div key={actor.id ?? index} className="text-center">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-full overflow-hidden mx-auto mb-2 sm:mb-3 ring-2 ring-red-600/30 bg-gray-800">
@@ -282,10 +359,14 @@ export default function MoviePage({ params }) {
                       sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
                     />
                   </div>
-                  <p className="text-white font-medium text-xs sm:text-sm line-clamp-2">{actor.name}</p>
-                  <p className="text-gray-400 text-xs mt-1 line-clamp-2">{actor.character}</p>
+                  <p className="text-white font-medium text-xs sm:text-sm line-clamp-2">
+                    {actor.name}
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1 line-clamp-2">
+                    {actor.character}
+                  </p>
                 </div>
-              )
+              );
             })}
           </div>
         </section>
@@ -307,16 +388,24 @@ export default function MoviePage({ params }) {
                   <div className="space-y-4 sm:space-y-6">
                     {movie.downloads
                       .reduce((acc, download) => {
-                        if (acc.length === 0 || acc[acc.length - 1].type !== download.type) {
-                          acc.push({ type: download.type, items: [download] })
+                        if (
+                          acc.length === 0 ||
+                          acc[acc.length - 1].type !== download.type
+                        ) {
+                          acc.push({ type: download.type, items: [download] });
                         } else {
-                          acc[acc.length - 1].items.push(download)
+                          acc[acc.length - 1].items.push(download);
                         }
-                        return acc
+                        return acc;
                       }, [])
                       .map((group, index) => (
-                        <div key={index} className="bg-black/30 p-3 sm:p-5 rounded-lg border border-red-700/50">
-                          <h4 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-red-300">{group.type}</h4>
+                        <div
+                          key={index}
+                          className="bg-black/30 p-3 sm:p-5 rounded-lg border border-red-700/50"
+                        >
+                          <h4 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-red-300">
+                            {group.type}
+                          </h4>
                           <div className="space-y-3">
                             {group.items.map((item, idx) => (
                               <div
@@ -327,7 +416,9 @@ export default function MoviePage({ params }) {
                                   <p className="text-white font-medium text-sm sm:text-base">
                                     {item.quality || "Unknown Quality"}
                                   </p>
-                                  <p className="text-gray-400 text-xs">{item.videoType || "Unknown Type"}</p>
+                                  <p className="text-gray-400 text-xs">
+                                    {item.videoType || "Unknown Type"}
+                                  </p>
                                 </div>
                                 <a
                                   href={item.url}
@@ -358,7 +449,9 @@ export default function MoviePage({ params }) {
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                           <div>
-                            <p className="text-white font-bold text-base sm:text-lg">{subtitle.language}</p>
+                            <p className="text-white font-bold text-base sm:text-lg">
+                              {subtitle.language}
+                            </p>
                           </div>
                           <a
                             href={subtitle.url}
@@ -384,67 +477,102 @@ export default function MoviePage({ params }) {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Company</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Company
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/about" className="hover:text-white transition-colors">
+                  <Link
+                    href="/about"
+                    className="hover:text-white transition-colors"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/careers" className="hover:text-white transition-colors">
+                  <Link
+                    href="/careers"
+                    className="hover:text-white transition-colors"
+                  >
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="/press" className="hover:text-white transition-colors">
+                  <Link
+                    href="/press"
+                    className="hover:text-white transition-colors"
+                  >
                     Press
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Support</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Support
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/help" className="hover:text-white transition-colors">
+                  <Link
+                    href="/help"
+                    className="hover:text-white transition-colors"
+                  >
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
+                  <Link
+                    href="/contact"
+                    className="hover:text-white transition-colors"
+                  >
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/feedback" className="hover:text-white transition-colors">
+                  <Link
+                    href="/feedback"
+                    className="hover:text-white transition-colors"
+                  >
                     Feedback
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Legal</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Legal
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition-colors">
+                  <Link
+                    href="/privacy"
+                    className="hover:text-white transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
+                  <Link
+                    href="/terms"
+                    className="hover:text-white transition-colors"
+                  >
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cookies" className="hover:text-white transition-colors">
+                  <Link
+                    href="/cookies"
+                    className="hover:text-white transition-colors"
+                  >
                     Cookie Policy
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Connect</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                Connect
+              </h3>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li>
                   <Link href="#" className="hover:text-white transition-colors">
@@ -470,7 +598,7 @@ export default function MoviePage({ params }) {
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
 function formatMovie(movieData) {
@@ -480,9 +608,13 @@ function formatMovie(movieData) {
     tagline: movieData.tagline,
     overview: movieData.overview,
     releaseDate: movieData.releaseDate,
-    year: movieData.releaseDate ? new Date(movieData.releaseDate).getFullYear() : "N/A",
+    year: movieData.releaseDate
+      ? new Date(movieData.releaseDate).getFullYear()
+      : "N/A",
     runtime: formatRuntime(movieData.runtime),
-    rating: movieData.voteAverage ? Number.parseFloat(movieData.voteAverage.toFixed(1)) : "N/A",
+    rating: movieData.voteAverage
+      ? Number.parseFloat(movieData.voteAverage.toFixed(1))
+      : "N/A",
     voteCount: movieData.voteCount,
     genres: movieData.genres,
     posterPath: movieData.posterPath || "/poster.svg",
@@ -495,7 +627,9 @@ function formatMovie(movieData) {
       name: actor.originalName,
       character: actor.character,
       profilePath:
-        (typeof actor.profilePath === "string" ? actor.profilePath : actor.profilePath?.path) || "/profile.svg",
+        (typeof actor.profilePath === "string"
+          ? actor.profilePath
+          : actor.profilePath?.path) || "/profile.svg",
     })),
     downloads: movieData.downloads.map((file) => ({
       type: file.downloadType,
@@ -506,14 +640,17 @@ function formatMovie(movieData) {
     subtitles: movieData.subtitles.map((subtitle) => ({
       id: subtitle.id,
       language: subtitle.language,
-      url: typeof subtitle.url === "string" ? subtitle.url : subtitle.url?.link || "#",
+      url:
+        typeof subtitle.url === "string"
+          ? subtitle.url
+          : subtitle.url?.link || "#",
     })),
-  }
+  };
 }
 
 function formatRuntime(minutes) {
-  if (!minutes || minutes <= 0) return "N/A"
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  return `${hours}h ${remainingMinutes}m`
+  if (!minutes || minutes <= 0) return "N/A";
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
 }
