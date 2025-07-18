@@ -1,10 +1,11 @@
 // lib/db.js
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/moviedb';
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/moviedb";
 
 if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
+  throw new Error("Please define the MONGODB_URI environment variable");
 }
 
 let cached = global.mongoose;
@@ -36,6 +37,17 @@ async function connectDB() {
   }
 
   return cached.conn;
+}
+
+/* use the native driver for raw queries */
+export async function getNativeDB() {
+  const conn = await connectDB();
+  return conn.connection.db;
+}
+
+/* use the Mongoose model */
+export function getUserModel() {
+  return UserModel;
 }
 
 export default connectDB;

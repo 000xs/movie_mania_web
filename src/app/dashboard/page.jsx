@@ -6,6 +6,11 @@ import MovieCard from "@/components/MovieCard";
 import TVSeriesCard from "@/components/TVSeriesCard";
 import Image from "next/image";
 
+import { getServerSession } from "next-auth";
+ 
+ 
+
+ 
 async function getMovies() {
   const res = await fetch("/api/movies");
   const data = await res.json();
@@ -18,10 +23,13 @@ async function getTVSeries() {
   return data.results;
 }
 
-export default function Dashboard() {
+export default  function Dashboard() {
   const [movies, setMovies] = useState([]);
   const [tvSeries, setTVSeries] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  
+   
 
   useEffect(() => {
     const fetchData = async () => {

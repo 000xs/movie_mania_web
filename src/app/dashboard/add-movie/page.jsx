@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, Film, Subtitles, Calendar, Star, Users, Clock, Image, FileText, X, Plus, Check } from "lucide-react";
 import { getMovieDetails } from "@/lib/tmdb-server";
 import DownloadInput from "@/components/DownloadInput";
+
 export default function AddMovie() {
   const router = useRouter();
   const [title, setTitle] = useState("");

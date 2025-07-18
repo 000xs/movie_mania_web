@@ -24,6 +24,8 @@ export default function EditMovie() {
   const router = useRouter();
   const { id } = useParams();
 
+  
+
   /* ---------- state ---------- */
   const [title, setTitle] = useState("");
   const [overview, setOverview] = useState("");
