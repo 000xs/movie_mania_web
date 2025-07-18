@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 
+
+
 export default function MoviePage({ params }) {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
