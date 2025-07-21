@@ -5,5 +5,6 @@ import MoviePage from "./[id]";
 export { generateMetadata }; // ✅ server-only export
 
 export default async function Page({ params }) {
-  return <MoviePage mId={params.id}   />;
+  const { id } = await params;
+  return <MoviePage mId={id}   />;
 }

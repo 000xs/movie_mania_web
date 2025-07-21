@@ -1,9 +1,10 @@
 // lib/movieMeta.js — 100 % server-side, zero React
 export async function generateMetadata({ params }) {
+  const { id } = await params;
   const HOST = process.env.NEXT_PUBLIC_HOST || "https://www.moviemanialk.com";
 
   // absolute URL for fetch inside server component
-  const res = await fetch(`${HOST}/api/movies/${params.id}`, {
+  const res = await fetch(`${HOST}/api/movies/${id}`, {
     next: { revalidate: 60 },
   });
 
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }) {
     m.releaseDate
   ).getFullYear()}) | Movie Mania`;
   const description = (m.overview || "").slice(0, 160);
-  const canonical = `${HOST}/movie/${params.id}`;
+  const canonical = `${HOST}/movie/${id}`;
 
   return {
     title,
