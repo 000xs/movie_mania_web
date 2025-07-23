@@ -2,7 +2,7 @@
 import { generateMetadata } from "@/lib/generateMovieMetadata";
 import MoviePage from "./[id]";
 
-export { generateMetadata }; // ✅ server-only export
+export { generateMetadata }; 
 
 export default async function Page({ params }) {
   const { id } = await params;
