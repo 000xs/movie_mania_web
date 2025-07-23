@@ -169,6 +169,7 @@ export async function POST(request) {
     }
 
     // Clean seasons and episodes to remove undefined/null and fix fields
+    
     if (Array.isArray(data.seasons)) {
       data.seasons = data.seasons.map((season) => {
         // Clean season fields, e.g. ensure air_date and season_number have fallback values or are removed if undefined

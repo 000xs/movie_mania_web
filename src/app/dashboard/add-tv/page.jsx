@@ -232,13 +232,14 @@ export default function AddTvSeries() {
     }
   };
 
-  /* ---------- submit ---------- */
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!tvData.name.trim()) {
       setError("TV series name is required.");
       return;
     }
+    let tvID  = `${tvData.nameෆ}-${ tmdbId || extractTmdbIdFromUrl(tmdbUrl)}`
 
     const payload = {
       ...tvData,
@@ -248,7 +249,7 @@ export default function AddTvSeries() {
       voteCount: Number(tvData.voteCount) || 0,
       popularity: Number(tvData.popularity) || 0,
       tmdbId: Number(tmdbId || extractTmdbIdFromUrl(tmdbUrl)),
-      tvseriesId: tmdbId || extractTmdbIdFromUrl(tmdbUrl),
+      tvseriesId: tvID,
       episodeRunTime: tvData.episodeRunTime.length
         ? tvData.episodeRunTime
         : tvData.runtime
