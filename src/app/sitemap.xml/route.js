@@ -46,14 +46,14 @@ export async function GET() {
       url: `${baseUrl}/movie/${id}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
-      priority: 0.7,
+      priority: 0.9,
     }));
 
     const tvSeriesRoutes = tvSeriesIds.map((id) => ({
       url: `${baseUrl}/tv/${id}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
-      priority: 0.7,
+      priority: 0.9,
     }));
 
     const staticRoutes = [
