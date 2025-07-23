@@ -253,7 +253,7 @@ export default function Home() {
               >
                 TV Shows
               </Link>
-              <Link
+              {/* <Link
                 href="/my-list"
                 className="hover:text-gray-300 transition-colors text-sm"
               >
@@ -264,7 +264,7 @@ export default function Home() {
                 className="hover:text-gray-300 transition-colors text-sm"
               >
                 Dashboard
-              </Link>
+              </Link> */}
             </nav>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -290,7 +290,7 @@ export default function Home() {
                 <Menu className="w-5 h-5" />
               )}
             </button>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div>
+            {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
           </div>
         </div>
 
@@ -332,7 +332,7 @@ export default function Home() {
                 >
                   TV Shows
                 </Link>
-                <Link
+                {/* <Link
                   href="/my-list"
                   className="hover:text-gray-300 transition-colors text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
@@ -345,7 +345,7 @@ export default function Home() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
-                </Link>
+                </Link> */}
               </nav>
             </div>
           </div>

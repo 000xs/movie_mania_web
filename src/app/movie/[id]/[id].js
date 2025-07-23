@@ -50,7 +50,7 @@ export default function MoviePage({ mId }) {
     fetchMovieData();
   }, [mId]);
 
-  // SEO: Add canonical URL
+   
   const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
 
   if (loading) {
@@ -115,37 +115,7 @@ export default function MoviePage({ mId }) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Head>
-        <title>
-          {movie.title} ({movie.year}) | Movie Mania
-        </title>
-        <meta name="description" content={movie.overview.substring(0, 160)} />
-        <link rel="canonical" href={canonicalUrl} />
-
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={`${movie.title} (${movie.year})`} />
-        <meta
-          property="og:description"
-          content={movie.overview.substring(0, 160)}
-        />
-        <meta property="og:image" content={movie.posterPath} />
-
-        {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={canonicalUrl} />
-        <meta
-          property="twitter:title"
-          content={`${movie.title} (${movie.year})`}
-        />
-        <meta
-          property="twitter:description"
-          content={movie.overview.substring(0, 160)}
-        />
-        <meta property="twitter:image" content={movie.posterPath} />
-      </Head>
-
+       
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -170,7 +140,7 @@ export default function MoviePage({ mId }) {
             <button className="p-2 hover:bg-gray-800 rounded-full transition-colors">
               <Share className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div>
+            {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
           </div>
         </div>
       </header>

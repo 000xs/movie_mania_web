@@ -135,7 +135,7 @@ export default function TvSeriesPage({ seriesId }) {
             <button className="p-2 hover:bg-gray-800 rounded-full transition-colors">
               <Share className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div>
+            {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
           </div>
         </div>
       </header>
