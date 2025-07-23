@@ -23,7 +23,7 @@ export async function generateMetadata({ params }) {
       .replace(/\s+…?$/, "…") ||
     `Watch or download ${series.name} ${season.name} with Sinhala subtitles.`;
   const canonical = `${HOST}/tv/${id}/season/${season_number}`;
-  const imgUrl = `https://image.tmdb.org/t/p/w1280${season.posterPath}`;
+  const imgUrl = season.posterPath
 
   // 3️⃣ Return Next.js metadata object
   return {

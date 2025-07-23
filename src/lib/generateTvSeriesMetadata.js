@@ -23,10 +23,7 @@ export async function generateMetadata({ params }) {
       (series.overview || "").trim().slice(0, 160).replace(/\s+…?$/, "…") ||
       `Watch or download ${series.name} with Sinhala subtitles.`;
     const canonical = `${HOST}/tv/${id}`;
-    const imgUrl = series.backdrop
-      ? `https://image.tmdb.org/t/p/w1280${series.backdrop}`
-      : `${HOST}/placeholder.jpg`;
-  
+    
     // Return Next.js metadata object
     return {
       title,
@@ -38,14 +35,14 @@ export async function generateMetadata({ params }) {
         title,
         description,
         url: canonical,
-        images: [imgUrl],
+        images: [series.posterPath],
       },
   
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: [imgUrl],
+        images: [series.posterPath],
       },
   
       // JSON-LD structured data
@@ -55,7 +52,7 @@ export async function generateMetadata({ params }) {
           "@type": "TVSeries",
           name: series.name,
           description: series.overview,
-          image: imgUrl,
+          image: series.posterPath,
           datePublished: series.firstAirDate,
           lastDate: series.lastAirDate,
           numberOfSeasons: series.numberOfSeasons,
