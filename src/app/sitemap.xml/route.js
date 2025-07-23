@@ -63,18 +63,18 @@ export async function GET() {
         changeFrequency: 'daily',
         priority: 1.0,
       },
-      {
-        url: `${baseUrl}/tvseries`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.8,
-      },
-      {
-        url: `${baseUrl}/movie`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.8,
-      },
+      // {
+      //   url: `${baseUrl}/tvseries`,
+      //   lastModified: new Date(),
+      //   changeFrequency: 'daily',
+      //   priority: 0.8,
+      // },
+      // {
+      //   url: `${baseUrl}/movie`,
+      //   lastModified: new Date(),
+      //   changeFrequency: 'daily',
+      //   priority: 0.8,
+      // },
     ];
 
     const allUrls = [...staticRoutes, ...movieRoutes, ...tvSeriesRoutes];
