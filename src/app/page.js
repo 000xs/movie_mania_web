@@ -139,7 +139,7 @@ export default function Home() {
         if (trendingMovies && trendingMovies.length > 0) {
           const featured = trendingMovies[0];
           setFeaturedMovie({
-            id: featured.id,
+            id: featured.movieId || featured.id,
             title: featured.title,
             year: featured.releaseDate
               ? new Date(featured.releaseDate).getFullYear()
@@ -241,7 +241,7 @@ export default function Home() {
               >
                 Home
               </Link>
-              <Link
+              {/* <Link
                 href="/movies"
                 className="hover:text-gray-300 transition-colors text-sm"
               >
@@ -252,7 +252,7 @@ export default function Home() {
                 className="hover:text-gray-300 transition-colors text-sm"
               >
                 TV Shows
-              </Link>
+              </Link> */}
               {/* <Link
                 href="/my-list"
                 className="hover:text-gray-300 transition-colors text-sm"
@@ -269,7 +269,7 @@ export default function Home() {
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="relative hidden sm:block">
+            {/* <form onSubmit={handleSearch} className="relative hidden sm:block">
               <input
                 type="text"
                 value={search}
@@ -278,7 +278,7 @@ export default function Home() {
                 className="w-40 sm:w-48 md:w-64 px-3 sm:px-4 py-2 bg-black/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               />
               <Search className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            </form>
+            </form> */}
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -299,7 +299,7 @@ export default function Home() {
           <div className="lg:hidden bg-black/95 border-t border-gray-800">
             <div className="px-4 py-4 space-y-4">
               {/* Mobile Search */}
-              <form onSubmit={handleSearch} className="relative sm:hidden">
+              {/* <form onSubmit={handleSearch} className="relative sm:hidden">
                 <input
                   type="text"
                   value={search}
@@ -308,7 +308,7 @@ export default function Home() {
                   className="w-full px-4 py-2 bg-black/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              </form>
+              </form> */}
               {/* Mobile Navigation */}
               <nav className="flex flex-col space-y-3">
                 <Link
@@ -318,7 +318,7 @@ export default function Home() {
                 >
                   Home
                 </Link>
-                <Link
+                {/* <Link
                   href="/movies"
                   className="hover:text-gray-300 transition-colors text-sm py-2"
                   onClick={() => setMobileMenuOpen(false)}
@@ -331,7 +331,7 @@ export default function Home() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   TV Shows
-                </Link>
+                </Link> */}
                 {/* <Link
                   href="/my-list"
                   className="hover:text-gray-300 transition-colors text-sm py-2"
@@ -354,7 +354,9 @@ export default function Home() {
 
       {/* Hero Section */}
       {featuredMovie && (
+        
         <section className="relative min-h-screen flex items-center pt-16 sm:pt-20">
+           
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${featuredMovie.backdrop})` }}
@@ -395,14 +397,14 @@ export default function Home() {
               {featuredMovie.description.slice(0, 150)}...
             </p>
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-              <button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
+              <Link href={`/movie/${featuredMovie.id}#downloads`} className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
                 <Play className="w-5 h-5 mr-2" />
                 Play
-              </button>
-              <button className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
+              </Link>
+              <Link  href={`/movie/${featuredMovie.id}#info`}className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
                 <Info className="w-5 h-5 mr-2" />
                 More Info
-              </button>
+              </Link>
             </div>
           </div>
         </section>

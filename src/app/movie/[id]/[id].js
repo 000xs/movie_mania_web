@@ -49,6 +49,11 @@ export default function MoviePage({ mId }) {
 
     fetchMovieData();
   }, [mId]);
+  const handleShare = () => {
+    const shareLink = `${window.location.origin}/movie/${mId}`;
+    navigator.clipboard.writeText(shareLink);
+    alert("Link copied: " + shareLink);
+  };
 
    
   const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
@@ -137,7 +142,7 @@ export default function MoviePage({ mId }) {
             </button>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+            <button onClick={handleShare} className="p-2 hover:bg-gray-800 rounded-full transition-colors">
               <Share className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
@@ -155,7 +160,7 @@ export default function MoviePage({ mId }) {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/40 sm:to-transparent"></div>
         </div>
-        <div className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div id="info" className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-center">
             {/* Movie Poster */}
             <div className="lg:col-span-1 order-2 lg:order-1">
@@ -222,10 +227,10 @@ export default function MoviePage({ mId }) {
               </p>
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
+                {/* <button className="bg-white text-black hover:bg-gray-200 px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-md transition-colors flex items-center justify-center">
                   <Play className="w-5 h-5 mr-2" />
                   Play Trailer
-                </button>
+                </button> */}
                 <Link href={`#downloads`} className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
                   <Download className="w-5 h-5 mr-2" />
                   Download
