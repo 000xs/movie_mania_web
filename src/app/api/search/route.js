@@ -1,73 +1,85 @@
-// app/api/search/route.js
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Movie from '@/lib/models/Movie';
-import TVSeries from '@/lib/models/TVSeries';
+import { NextResponse } from "next/server";
+import { MongoClient } from "mongodb";
 
 export async function GET(request) {
   try {
-    await connectDB();
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query') || searchParams.get('q');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const q   = searchParams.get("q") || searchParams.get("query");
+    const page  = Math.max(parseInt(searchParams.get("page") || "1"), 1);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
+    const skip  = (page - 1) * limit;
 
-    if (!query) {
-      return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
+    if (!q?.trim()) {
+      return NextResponse.json({ error: "q or query required" }, { status: 400 });
     }
 
-    const searchQuery = {
-      $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { name: { $regex: query, $options: 'i' } },
-        { overview: { $regex: query, $options: 'i' } }
-      ]
-    };
+    const client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    const db = client.db("movie_mania");
 
-    const skip = (page - 1) * limit;
+    // Fuzzy / autocomplete search
+    const movies = await db
+      .collection("movies")
+      .aggregate([
+        {
+          $search: {
+            index: "movies_search",
+            compound: {
+              should: [
+                { autocomplete: { query: q, path: "title", score: { boost: 3 } } },
+                { text: { query: q, path: "title", fuzzy: { maxEdits: 2 } } },
+                { text: { query: q, path: "overview", fuzzy: { maxEdits: 1 } } },
+              ],
+            },
+          },
+        },
+        { $addFields: { media_type: "movie", score: { $meta: "searchScore" } } },
+        { $skip: skip / 2 },
+        { $limit: Math.ceil(limit / 2) },
+      ])
+      .toArray();
 
-    const movies = await Movie.find({
-      $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { overview: { $regex: query, $options: 'i' } }
-      ]
-    }).limit(limit / 2).skip(skip / 2);
+    const tvSeries = await db
+      .collection("tvseries")
+      .aggregate([
+        {
+          $search: {
+            index: "tvseries_search",
+            compound: {
+              should: [
+                { autocomplete: { query: q, path: "name", score: { boost: 3 } } },
+                { text: { query: q, path: "name", fuzzy: { maxEdits: 2 } } },
+                { text: { query: q, path: "overview", fuzzy: { maxEdits: 1 } } },
+              ],
+            },
+          },
+        },
+        { $addFields: { media_type: "tv", score: { $meta: "searchScore" } } },
+        { $skip: skip / 2 },
+        { $limit: Math.ceil(limit / 2) },
+      ])
+      .toArray();
 
-    const tvSeries = await TVSeries.find({
-      $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { overview: { $regex: query, $options: 'i' } }
-      ]
-    }).limit(limit / 2).skip(skip / 2);
+    // Merge & sort by relevance
+    const results = [...movies, ...tvSeries]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
 
-    const results = [
-      ...movies.map(movie => ({ ...movie.toObject(), media_type: 'movie' })),
-      ...tvSeries.map(tv => ({ ...tv.toObject(), media_type: 'tv' }))
-    ];
-
-    const totalMovies = await Movie.countDocuments({
-      $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { overview: { $regex: query, $options: 'i' } }
-      ]
-    });
-
-    const totalTV = await TVSeries.countDocuments({
-      $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { overview: { $regex: query, $options: 'i' } }
-      ]
-    });
-
+    // Fast counts for pagination
+    const [totalMovies, totalTV] = await Promise.all([
+      db.collection("movies").countDocuments({ $text: { $search: q } }),
+      db.collection("tvseries").countDocuments({ $text: { $search: q } }),
+    ]);
     const total = totalMovies + totalTV;
 
     return NextResponse.json({
       results,
       page,
       total_pages: Math.ceil(total / limit),
-      total_results: total
+      total_results: total,
     });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
