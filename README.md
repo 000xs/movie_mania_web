@@ -37,8 +37,8 @@ Built with **React**, **TailwindCSS** and powered by the **TMDB API**.
 3. **Environment variables**  
    Create `.env` in the project root:
    ```dotenv
-   VITE_TMDB_API_KEY=your_tmdb_api_key_here
-   VITE_TMDB_BASE_URL=https://api.themoviedb.org/3
+   TMDB_API_KEY=your_tmdb_api_key_here
+   TMDB_BASE_URL=https://api.themoviedb.org/3
    ```
 
 4. **Start the dev server**
