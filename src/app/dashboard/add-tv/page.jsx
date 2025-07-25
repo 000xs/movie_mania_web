@@ -23,6 +23,7 @@ import {
   Users,
   Briefcase,
 } from "lucide-react";
+import { randomInt } from 'crypto';
 
 
 export default function AddTvSeries() {
@@ -239,7 +240,7 @@ export default function AddTvSeries() {
       setError("TV series name is required.");
       return;
     }
-    let tvID  = `${tvData.nameෆ}-${ tmdbId || extractTmdbIdFromUrl(tmdbUrl)}`
+    let tvID  = `${tvData.name}-${ tmdbId || extractTmdbIdFromUrl(tmdbUrl)}`
 
     const payload = {
       ...tvData,
