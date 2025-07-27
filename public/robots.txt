@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /*
+Disallow: /api/*
+Disallow: /dashboard/*
+Disallow: /_next/*
+Disallow: /404
+Disallow: /500
+
+Sitemap: https://www.moviemanialk.com/sitemap.xml
