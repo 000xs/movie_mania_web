@@ -29,6 +29,7 @@ export default function AddMovie() {
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [dbResponse, setDbResponse] = useState(null);
 
   const extractTmdbIdFromUrl = (url) => {
     const match = url.match(/(movie|tv)\/(\d+)/);
@@ -96,102 +97,140 @@ export default function AddMovie() {
     }
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
+    setSuccessMessage('');
 
-    const movieData = {
-      title,
-      overview,
-      posterPath,
-      backdropPath,
-      releaseDate,
-      voteAverage: parseFloat(voteAverage),
-      genres: genres,
-      cast,
-      crew,
-      productionCompanies,
-      productionCountries,
-      spokenLanguages,
-      downloads,
-      subtitles,
-      runtime: runtime,
-    };
-    // / Prepare download info for telegram notification
-    const telegramPayload = {
-      type: 'movie',
-      media: {
-        ...movieData,
-        downloads: movieData.downloads // ✅ keep as array
-      }
-    };
-    const message_id = telegramSend(telegramPayload)
-
-    if (message_id) {
-      console.log(message_id)
-      setSuccessMessage("Telegram added succesfully!")
-
-      // save databse mive data 
-
-      try {
-        const response = await fetch("/api/movies", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(movieData),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to create movie.");
-        } else {
-
-
-        }
-
-        setSuccessMessage("Movie added successfully!");
-        // router.push("/dashboard");
-
-
-      } catch (err) {
-        setError(err.message);
-        console.error("Error creating movie:", err);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setError("Tellegram add errr!")
-    }
-
-  };
-
-  const telegramSend = async (data) => {
     try {
-      const response = await fetch("/api/notify-telegram", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // 1. Telegram notification
+      const telegramPayload = {
+        type: 'movie',
+        media: {
+          title,
+          overview,
+          posterPath,
+          backdropPath,
+          releaseDate,
+          voteAverage: parseFloat(voteAverage),
+          genres,
+          cast,
+          crew,
+          productionCompanies,
+          productionCountries,
+          spokenLanguages,
+          downloads,
+          subtitles,
+          runtime,
         },
-        body: JSON.stringify(data),
+      };
+
+      const telegramId = await telegramSend(telegramPayload);
+      if (!telegramId) throw new Error('Failed to send Telegram notification');
+
+      // 2. Save to DB
+      const dbRes = await fetch('/api/movies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          overview,
+          posterPath,
+          backdropPath,
+          releaseDate,
+          voteAverage: parseFloat(voteAverage),
+          genres,
+          cast,
+          crew,
+          productionCompanies,
+          productionCountries,
+          spokenLanguages,
+          downloads,
+          subtitles,
+          runtime,
+        }),
       });
 
-      if (!response.ok) {
-
-        const errorData = await response.json();
-        const data = await response.json();
-        console.log(data)
-        console.error("Failed to send Telegram notification:", errorData.error || "Unknown error");
-        return data.message_id
-      } else {
-        console.log("Telegram notification sent successfully!");
+      if (!dbRes.ok) {
+        const { error = 'DB save failed' } = await safeJson(dbRes);
+        throw new Error(error);
       }
-    } catch (error) {
-      console.error("Error sending Telegram notification:", error);
+
+      const { movieId: savedId } = await dbRes.json();
+      if (!savedId) throw new Error('DB did not return an id');
+
+      // 3. Facebook post
+      const fbRes = await createFacebookPost({
+        _id: savedId,
+        posterPath,
+        title,
+        releaseDate,
+        genres,
+      });
+
+      setSuccessMessage(
+        `Movie added successfully! Telegram: ${telegramId}  Facebook: ${fbRes.post_id}`
+      );
+    } catch (err) {
+      console.error('Submission error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const telegramSend = async (payload) => {
+    const res = await fetch('/api/notify-telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return null;
+    const { message_id } = await res.json();
+    return message_id;
+  };
+
+  const createFacebookPost = async ({
+    _id,
+    posterPath,
+    title,
+    releaseDate,
+    genres,
+  }) => {
+    if (!_id || !posterPath) {
+      throw new Error('Missing _id or posterPath for Facebook');
+    }
+
+    const payload = {
+      movieId: _id,
+      image_url: posterPath,
+      title,
+      release_date: releaseDate,
+      genres,
+    };
+
+    const res = await fetch('/api/fb-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.message || 'Facebook post failed');
+    return data;
+  };
+
+  // safe JSON helper
+  async function safeJson(res) {
+    const text = await res.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error('Invalid JSON from server');
+    }
+  }
   const addGenre = (genre) => {
     if (genre.trim() && !genres.includes(genre.trim())) {
       setGenres([...genres, genre.trim()]);

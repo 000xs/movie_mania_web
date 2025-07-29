@@ -4,7 +4,7 @@ Allow: /*
 Disallow: /api/*
 Disallow: /dashboard/*
 Disallow: /_next/*
-Disallow: /admin
+Disallow: /admin/*
 Disallow: /404
 Disallow: /500
 
