@@ -139,6 +139,7 @@ export async function POST(request) {
 
     // Generate and assign a unique 4-digit movieId
     const customId = await generateUnique4DigitId(db);
+    const movieId = data.title ? data.title + "-" + customId : customId;
     data.movieId = data.title ? data.title + "-" + customId : customId;
 
     // Helper to check if a string is a relative path (starts with /)
@@ -309,7 +310,7 @@ export async function POST(request) {
     await movie.save();
 
     return NextResponse.json(
-      { message: "Movie created successfully", movieId: customId },
+      { message: "Movie created successfully", movieId: movieId },
       { status: 201 }
     );
   } catch (error) {
