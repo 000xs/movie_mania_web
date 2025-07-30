@@ -26,17 +26,17 @@ export const metadata = {
   authors: [{ name: 'Movie Mania LK' }],
   creator: 'Movie Mania LK',
   publisher: 'Movie Mania LK',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
+  // robots: {
+  //   index: true,
+  //   follow: true,
+  //   googleBot: {
+  //     index: true,
+  //     follow: true,
+  //     'max-video-preview': -1,
+  //     'max-image-preview': 'large',
+  //     'max-snippet': -1,
+  //   },
+  // },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -60,12 +60,16 @@ export const metadata = {
     creator: '@moviemanialk',
     images: ['https://www.moviemanialk.com/baner.png'],
   },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-  },
+  // verification: {
+  //   google: 'your-google-verification-code',
+  //   yandex: 'your-yandex-verification-code',
+  // },
+
   alternates: {
     canonical: 'https://www.moviemanialk.com',
+  },
+  other: {
+    monetag: '0faa976eb74b8ed2b84e79c6c85df2f3',
   },
 };
 
