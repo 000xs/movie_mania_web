@@ -1,23 +1,26 @@
-// lib/movieMeta.js — 100 % server-side, zero React
+// app/movie/[id]/page.js
+export const revalidate = 60; // ISR (optional)
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const HOST = process.env.NEXT_PUBLIC_HOST || "https://www.moviemanialk.com";
 
-  // absolute URL for fetch inside server component
-  const res = await fetch(`${HOST}/api/movies/${id}`, {
+  const res = await fetch(`${HOST}/api/movies/${encodeURIComponent(id)}`, {
     next: { revalidate: 60 },
   });
-
   if (!res.ok) return {};
 
   const { results } = await res.json();
+  if (!results?.length) return {};
+
   const m = results[0];
 
-  const title = `${m.title} (${new Date(
-    m.releaseDate
-  ).getFullYear()}) | Movie Mania`;
+  const title = `${m.title} (${new Date(m.releaseDate).getFullYear()}) | Movie Mania`;
   const description = (m.overview || "").slice(0, 160);
-  const canonical = `${HOST}/movie/${id}`;
+  const canonical = `${HOST}/movie/${encodeURIComponent(id)}`;
+  const img = m.posterPath?.startsWith("http")
+    ? m.posterPath
+    : `${HOST}${m.posterPath}`;
 
   return {
     title,
@@ -28,13 +31,13 @@ export async function generateMetadata({ params }) {
       title,
       description,
       url: canonical,
-      images: [m.posterPath],
+      images: [img],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [m.posterPath],
+      images: [img],
     },
     other: {
       "application/ld+json": JSON.stringify({
@@ -42,7 +45,7 @@ export async function generateMetadata({ params }) {
         "@type": "Movie",
         name: m.title,
         description: m.overview,
-        image: m.posterPath,
+        image: img,
         datePublished: m.releaseDate,
         genre: m.genres,
         aggregateRating: {
@@ -51,7 +54,7 @@ export async function generateMetadata({ params }) {
           reviewCount: m.voteCount,
         },
         duration: m.runtime,
-        trailer: { "@type": "VideoObject", url: canonical },
+        url: canonical,
       }),
     },
   };
