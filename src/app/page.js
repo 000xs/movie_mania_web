@@ -24,6 +24,7 @@ import {
   getTrendingTvSeries,
 } from "../lib/tmdb";
 import Footer from "@/components/ui/Footer";
+import AdClickTrigger from "@/components/AdClickTrigger";
 
 export default function Home() {
   const router = useRouter();
@@ -223,6 +224,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
+      <AdClickTrigger adUrl={'https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f'} / >
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center space-x-4 sm:space-x-8">

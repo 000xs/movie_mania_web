@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 import Footer from "@/components/ui/Footer";
+import AdClickTrigger from "@/components/AdClickTrigger";
 
 
 
@@ -121,6 +122,7 @@ export default function MoviePage({ mId }) {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <AdClickTrigger adUrl={'https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f'} /> 
        
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
