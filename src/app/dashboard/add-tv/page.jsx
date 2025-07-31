@@ -240,7 +240,7 @@ export default function AddTvSeries() {
       setError("TV series name is required.");
       return;
     }
-    let tvID  = `${tvData.name}-${ tmdbId || extractTmdbIdFromUrl(tmdbUrl)}`
+    let tvID = `${tvData.name.replace(/\s+/g, '-')}-${tmdbId || extractTmdbIdFromUrl(tmdbUrl)}`;
 
     const payload = {
       ...tvData,

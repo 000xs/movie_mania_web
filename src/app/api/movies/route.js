@@ -139,8 +139,8 @@ export async function POST(request) {
 
     // Generate and assign a unique 4-digit movieId
     const customId = await generateUnique4DigitId(db);
-    const movieId = data.title ? data.title + "-" + customId : customId;
-    data.movieId = data.title ? data.title + "-" + customId : customId;
+    const movieId = data.title ? data.title.replace(/\s/g, '-') + "-" + customId : customId;
+    data.movieId = data.title ? data.title.replace(/\s/g, '-') + "-" + customId : customId;
 
     // Helper to check if a string is a relative path (starts with /)
     const isRelativePath = (path) => path && path.startsWith('/');
