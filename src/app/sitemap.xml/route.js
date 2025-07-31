@@ -43,14 +43,14 @@ export async function GET() {
     const tvSeriesIds = await fetchTvSeriesIds();
 
     const movieRoutes = movieIds.map((id) => ({
-      url: `${baseUrl}/movie/${id}`,
+      url: `${baseUrl}/movie/${encodeURIComponent(id)}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
       priority: 0.9,
     }));
 
     const tvSeriesRoutes = tvSeriesIds.map((id) => ({
-      url: `${baseUrl}/tv/${id}`,
+      url: `${baseUrl}/tv/${encodeURIComponent(id)}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
       priority: 0.9,
