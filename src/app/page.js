@@ -244,12 +244,13 @@ export default function Home() {
               >
                 Home
               </Link>
-              {/* <Link
-                href="/movies"
+              <Link
+                href="/movie"
                 className="hover:text-gray-300 transition-colors text-sm"
               >
                 Movies
               </Link>
+               {/*
               <Link
                 href="/tv-shows"
                 className="hover:text-gray-300 transition-colors text-sm"
