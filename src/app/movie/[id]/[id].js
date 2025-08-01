@@ -119,6 +119,7 @@ export default function MoviePage({ mId }) {
       </div>
     );
   }
+  
 
   return (
     <div className="min-h-screen bg-black text-white">
