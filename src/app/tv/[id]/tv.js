@@ -19,6 +19,7 @@ import {
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 import Footer from "@/components/ui/Footer";
 import AdClickTrigger from "@/components/AdClickTrigger";
+import Script from "next/script";
 
 export default function TvSeriesPage({ seriesId }) {
   const [series, setSeries] = useState(null);
@@ -200,6 +201,7 @@ export default function TvSeriesPage({ seriesId }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: ldJson }}
       />
+    
 
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
