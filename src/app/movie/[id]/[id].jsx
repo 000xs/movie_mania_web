@@ -18,17 +18,14 @@ import {
 import { getImageUrl, getBackdropUrl } from "../../../lib/tmdb";
 import Footer from "@/components/ui/Footer";
 import AdClickTrigger from "@/components/AdClickTrigger";
-
-
+import Script from "next/script";
 
 export default function MoviePage({ mId }) {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
-//   const mId = params.id;
-
-   
+  //   const mId = params.id;
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -57,7 +54,6 @@ export default function MoviePage({ mId }) {
     alert("Link copied: " + shareLink);
   };
 
-   
   const canonicalUrl = `https://www.moviemanialk.com/movie/${mId}`;
 
   if (loading) {
@@ -100,7 +96,6 @@ export default function MoviePage({ mId }) {
   if (!movie) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-         
         <div className="text-center max-w-md">
           <h1 className="text-2xl sm:text-4xl font-bold mb-4">
             Movie Not Found
@@ -119,12 +114,93 @@ export default function MoviePage({ mId }) {
       </div>
     );
   }
-  
+  // utils/ldJson.ts
+  function generateLdJson(m, img, canonical, HOST) {
+    return {
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Movie",
+            name: m.title,
+            description: m.overview,
+            image: img,
+            datePublished: m.releaseDate,
+            genre: m.genres,
+            url: canonical,
+            director: m.crew?.find((c) => c.job === "Director") || undefined,
+            actor: m.cast,
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: m.voteAverage,
+              ratingCount: m.voteCount,
+            },
+            potentialAction: {
+              "@type": "WatchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: `${HOST}/movie/${encodeURIComponent(m._id)}`,
+              },
+              actionPlatform: [
+                "http://schema.org/DesktopWebPlatform",
+                "http://schema.org/MobileWebPlatform",
+              ],
+            },
+            subtitle: {
+              "@type": "DigitalDocument",
+              name: `[${m.title}] Sinhala Subtitle`,
+              inLanguage: "si",
+              encodingFormat: "application/x-subrip",
+              url: m.subtitles?.[0]?.link,
+            },
+          },
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://www.moviemanialk.com/",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Movies",
+                item: "https://www.moviemanialk.com/movies/",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: m.title,
+                item: canonical,
+              },
+            ],
+          },
+        ],
+      }),
+    };
+  }
 
+  const canonical = `https://www.moviemanialk.com/movies/${encodeURIComponent(mId)}`;
+  const HOST = "https://www.moviemanialk.com";
+  const ldJson =generateLdJson(movie, canonical, HOST);
   return (
     <div className="min-h-screen bg-black text-white">
-      <AdClickTrigger adUrl={'https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f'} /> 
-       
+      <AdClickTrigger
+        adUrl={
+          "https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f"
+        }
+      />
+      <Head>
+        <Script
+          id="ld-json"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={ldJson}
+          strategy="afterInteractive"
+        />
+      </Head>
+
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -146,7 +222,10 @@ export default function MoviePage({ mId }) {
             </button>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button onClick={handleShare} className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+            <button
+              onClick={handleShare}
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+            >
               <Share className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
@@ -164,7 +243,10 @@ export default function MoviePage({ mId }) {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/40 sm:to-transparent"></div>
         </div>
-        <div id="info" className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div
+          id="info"
+          className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-center">
             {/* Movie Poster */}
             <div className="lg:col-span-1 order-2 lg:order-1">
@@ -235,7 +317,10 @@ export default function MoviePage({ mId }) {
                   <Play className="w-5 h-5 mr-2" />
                   Play Trailer
                 </button> */}
-                <Link href={`#downloads`} className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center">
+                <Link
+                  href={`#downloads`}
+                  className="border border-gray-400 text-white hover:bg-gray-800 px-6 sm:px-8 py-3 text-base sm:text-lg bg-transparent rounded-md transition-colors flex items-center justify-center"
+                >
                   <Download className="w-5 h-5 mr-2" />
                   Download
                 </Link>
@@ -291,7 +376,10 @@ export default function MoviePage({ mId }) {
 
       {/* Downloads & Subtitles Section */}
       {(movie.downloads.length > 0 || movie.subtitles.length > 0) && (
-        <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto" id="downloads">
+        <section
+          className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-7xl mx-auto"
+          id="downloads"
+        >
           <div className="bg-gradient-to-r from-red-900/20 to-blue-900/20 rounded-2xl border border-red-600/30 p-4 sm:p-6 lg:p-8">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-red-400 to-blue-400 bg-clip-text text-transparent">
               🎬 Downloads & Subtitles
