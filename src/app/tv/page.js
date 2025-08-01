@@ -1,5 +1,5 @@
 // app/movie/[id]/page.js
-import { generateMetadata } from "@/lib/generateTvListMetadata copy";
+import { generateMetadata } from "@/lib/generateTvListMetadata";
 import TvPage from "./tv";
 import { Suspense } from "react";
 export { generateMetadata };
