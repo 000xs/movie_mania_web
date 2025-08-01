@@ -221,45 +221,7 @@ export default function Home() {
       </div>
     );
   }
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": "https://www.moviemanialk.com/#website",
-        name: "MovieMania LK",
-        url: "https://www.moviemanialk.com/",
-        description:
-          "Download Sinhala Subtitles for Movies & TV Series - Your ultimate source for Sinhala subtitles.",
-        publisher: {
-          "@id": "https://www.moviemanialk.com/#organization",
-        },
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate:
-              "https://www.moviemanialk.com/search?q={search_term_string}",
-          },
-          "query-input": "required name=search_term_string",
-        },
-      },
-    ],
-  };
-
-  const orgSchemaData = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": "https://www.moviemanialk.com/#organization",
-    name: "MovieMania LK",
-    url: "https://www.moviemanialk.com/",
-    logo: "https://www.moviemanialk.com/logo.png", // Replace with your actual logo URL
-    sameAs: [
-      "https://www.facebook.com/your-moviemanialk-page", // Replace with your actual social media URLs
-      "https://twitter.com/your-moviemanialk-page",
-      "https://www.instagram.com/your-moviemanialk-page",
-    ],
-  };
+ 
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -269,16 +231,7 @@ export default function Home() {
           "https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f"
         }
       />
-      <Head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchemaData) }}
-        />
-      </Head>
+     
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center space-x-4 sm:space-x-8">

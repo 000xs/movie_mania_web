@@ -15,7 +15,9 @@ export async function generateMetadata({ params }) {
 
   const m = results[0];
 
-  const title = `${m.title} (${new Date(m.releaseDate).getFullYear()}) | Movie Mania`;
+  const title = `${m.title} (${new Date(
+    m.releaseDate
+  ).getFullYear()}) | Movie Mania`;
   const description = (m.overview || "").slice(0, 160);
   const canonical = `${HOST}/movie/${encodeURIComponent(id)}`;
   const img = m.posterPath?.startsWith("http")
@@ -42,19 +44,67 @@ export async function generateMetadata({ params }) {
     other: {
       "application/ld+json": JSON.stringify({
         "@context": "https://schema.org",
-        "@type": "Movie",
-        name: m.title,
-        description: m.overview,
-        image: img,
-        datePublished: m.releaseDate,
-        genre: m.genres,
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: m.voteAverage,
-          reviewCount: m.voteCount,
-        },
-        duration: m.runtime,
-        url: canonical,
+        "@graph": [
+          {
+            "@type": "Movie",
+            name: m.title,
+            description: m.overview,
+            image: img,
+            datePublished: m.releaseDate,
+            genre: m.genres,
+            url: canonical,
+            director: m.crew.find((c) => c.job === "Director"),
+            actor: m.cast,
+            genre: m.genres,
+            datePublished: m.releaseDate,
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: m.voteAverage,
+              ratingCount: m.voteCount,
+            },
+            potentialAction: {
+              "@type": "WatchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: `${HOST}/movie/${encodeURIComponent(m._id)}`,
+              },
+              actionPlatform: [
+                "http://schema.org/DesktopWebPlatform",
+                "http://schema.org/MobileWebPlatform",
+              ],
+            },
+            subtitle: {
+              "@type": "DigitalDocument",
+              name: `[${m.title}] Sinhala Subtitle`,
+              inLanguage: "si",
+              encodingFormat: "application/x-subrip",
+              url: m.subtitles[0]?.link,
+            },
+          },
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://www.moviemanialk.com/",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Movies",
+                item: "https://www.moviemanialk.com/movies/",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: m.name,
+                item: canonical,
+              },
+            ],
+          },
+        ],
       }),
     },
   };
