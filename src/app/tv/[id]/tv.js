@@ -113,10 +113,93 @@ export default function TvSeriesPage({ seriesId }) {
       </div>
     );
   }
+  // utils/generateLdJson.ts
+  function generateLdJson(series , canonical ) {
+    if (!series) return "";
+
+    return JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TVSeries",
+          name: series.name,
+          description: series.overview,
+          image: series.posterPath,
+          datePublished: series.firstAirDate,
+          lastDate: series.lastAirDate,
+          numberOfSeasons: series.numberOfSeasons,
+          numberOfEpisodes: series.numberOfEpisodes,
+          genre: series.genres,
+          url: canonical,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(series.voteAverage),
+            reviewCount: series.voteCount,
+          },
+          actor: series.cast?.map((c ) => ({
+            "@type": "Person",
+            name: c.name,
+          })),
+          potentialAction: {
+            "@type": "WatchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: canonical,
+            },
+            actionPlatform: [
+              "http://schema.org/DesktopWebPlatform",
+              "http://schema.org/MobileWebPlatform",
+            ],
+          },
+          subtitle: {
+            "@type": "DigitalDocument",
+            name: `${series.name || "TV Series"} Sinhala Subtitle`,
+            inLanguage: "si",
+            encodingFormat: "application/x-subrip",
+            url: canonical,
+          },
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Home",
+              item: "https://www.moviemanialk.com/",
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "TV Shows",
+              item: "https://www.moviemanialk.com/tv/",
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: series.name,
+              item: canonical,
+            },
+          ],
+        },
+      ],
+    });
+  }
+  const canonical = `${process.env.NEXT_PUBLIC_HOST}/tv/${series.id}`;
+  const ldJson = generateLdJson(series, canonical);
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <AdClickTrigger  adUrl={'https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f'} / >
+      <AdClickTrigger
+        adUrl={
+          "https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f"
+        }
+      />
+      <Script
+        id="ld-json-tv-series"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: ldJson }}
+      />
 
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -138,7 +221,10 @@ export default function TvSeriesPage({ seriesId }) {
             </button>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button onClick={handleShare} className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+            <button
+              onClick={handleShare}
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+            >
               <Share className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             {/* <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded-full"></div> */}
@@ -264,7 +350,6 @@ export default function TvSeriesPage({ seriesId }) {
         <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Seasons</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {series.seasons.map((season) => (
-            
             <Link
               key={season.seasonNumber}
               href={`/tv/${series.tvseriesId}/season/${season.seasonNumber}`}
@@ -341,7 +426,6 @@ export default function TvSeriesPage({ seriesId }) {
 
       {/* Footer */}
       <Footer />
-       
     </div>
   );
 }

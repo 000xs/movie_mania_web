@@ -80,42 +80,6 @@ export const metadata = {
   },
   other: {
     monetag: "0faa976eb74b8ed2b84e79c6c85df2f3",
-
-    "script:ld+json": JSON.stringify({
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "WebSite",
-          "@id": "https://www.moviemanialk.com/#website",
-          name: "MovieMania LK",
-          url: "https://www.moviemanialk.com/",
-          description:
-            "Download Sinhala Subtitles for Movies & TV Series – your ultimate source for Sinhala subtitles.",
-          publisher: { "@id": "https://www.moviemanialk.com/#organization" },
-          potentialAction: {
-            "@type": "SearchAction",
-            target: {
-              "@type": "EntryPoint",
-              urlTemplate:
-                "https://www.moviemanialk.com/search?q={search_term_string}",
-            },
-            "query-input": "required name=search_term_string",
-          },
-        },
-        {
-          "@type": "Organization",
-          "@id": "https://www.moviemanialk.com/#organization",
-          name: "MovieMania LK",
-          url: "https://www.moviemanialk.com/",
-          logo: "https://www.moviemanialk.com/logo.png",
-          sameAs: [
-            "https://www.facebook.com/moviemanialk",
-            "https://twitter.com/moviemanialk",
-            "https://www.instagram.com/moviemanialk",
-          ],
-        },
-      ],
-    }),
   },
 };
 

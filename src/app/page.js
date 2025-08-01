@@ -26,6 +26,7 @@ import {
 import Footer from "@/components/ui/Footer";
 import AdClickTrigger from "@/components/AdClickTrigger";
 import Head from "next/head";
+import Script from "next/script";
 
 export default function Home() {
   const router = useRouter();
@@ -221,7 +222,43 @@ export default function Home() {
       </div>
     );
   }
- 
+  const websiteLdJson = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.moviemanialk.com/#website",
+        name: "MovieMania LK",
+        url: "https://www.moviemanialk.com/",
+        description:
+          "Download Sinhala Subtitles for Movies & TV Series – your ultimate source for Sinhala subtitles.",
+        publisher: {
+          "@id": "https://www.moviemanialk.com/#organization",
+        },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate:
+              "https://www.moviemanialk.com/search?q={search_term_string}",
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.moviemanialk.com/#organization",
+        name: "MovieMania LK",
+        url: "https://www.moviemanialk.com/",
+        logo: "https://www.moviemanialk.com/logo.png",
+        sameAs: [
+          "https://www.facebook.com/moviemanialk",
+          "https://twitter.com/moviemanialk",
+          "https://www.instagram.com/moviemanialk",
+        ],
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -231,7 +268,15 @@ export default function Home() {
           "https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f"
         }
       />
-     
+      <Script
+        type="application/ld+json"
+        id="structured-data-web"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(websiteLdJson),
+        }}
+      />
+
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center space-x-4 sm:space-x-8">

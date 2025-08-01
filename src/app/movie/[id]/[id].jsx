@@ -184,7 +184,7 @@ export default function MoviePage({ mId }) {
 
   const canonical = `https://www.moviemanialk.com/movies/${encodeURIComponent(mId)}`;
   const HOST = "https://www.moviemanialk.com";
-  const ldJson =generateLdJson(movie, canonical, HOST);
+  const ldJson = generateLdJson(movie, canonical, HOST);
   return (
     <div className="min-h-screen bg-black text-white">
       <AdClickTrigger
@@ -192,14 +192,14 @@ export default function MoviePage({ mId }) {
           "https://enrageperplexparable.com/rnrg8zs2?key=61e60774e6d154f2f9097db811069d0f"
         }
       />
-      <Head>
-        <Script
-          id="ld-json"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={ldJson}
-          strategy="afterInteractive"
-        />
-      </Head>
+
+      <Script
+        id="ld-json"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={ldJson}
+        strategy="afterInteractive"
+      />
+
 
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
