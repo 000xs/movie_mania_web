@@ -153,7 +153,7 @@ export default function TvPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent">
-        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex items-center justify-between px-4 sm:px-6 bg-black lg:px-8 py-3 sm:py-4">
           <div className="flex items-center space-x-4 sm:space-x-8">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded flex items-center justify-center font-bold text-sm sm:text-xl">

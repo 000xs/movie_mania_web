@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getDB } from "@/lib/db";
+ 
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-me";
 
